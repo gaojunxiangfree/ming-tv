@@ -13,6 +13,12 @@
 #
 # 版本号规则: 主版本.次版本.修订号, versionCode = 主*10000 + 次*100 + 修订
 #
+# 分支约定(开发与生产隔离):
+#   feature/*  功能开发 -> 合入 dev
+#   dev        集成/自测 -> 验证通过后合入 main
+#   main       生产/发布 -> 只有这个分支能发包, 本脚本默认只允许在 main 上执行
+#   (如需临时放宽: RELEASE_BRANCH=<分支名> ./release.sh ...)
+#
 # 令牌(GitHub 写权限)按以下顺序查找:
 #   1) 环境变量 GH_TOKEN / GITHUB_TOKEN
 #   2) 仓库根目录的 .gh_token 文件(已加入 .gitignore), 例: echo 'github_pat_xxx' > .gh_token
@@ -123,6 +129,14 @@ fi
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 [ "$BRANCH" != "HEAD" ] || die "当前处于游离 HEAD 状态, 请切回分支"
+
+# 生产隔离: 默认只允许在 main 上发版, 避免把 dev 上的半成品打成 Release
+RELEASE_BRANCH="${RELEASE_BRANCH:-main}"
+if [ "$BRANCH" != "$RELEASE_BRANCH" ]; then
+    die "发版只允许在 $RELEASE_BRANCH 分支执行(当前: $BRANCH).
+    请先把改动合入 $RELEASE_BRANCH: git checkout $RELEASE_BRANCH && git merge --no-ff $BRANCH
+    如确需在当前分支发版: RELEASE_BRANCH=$BRANCH ./release.sh ..."
+fi
 
 git fetch --tags --quiet origin || warn "git fetch --tags 失败, 继续尝试"
 
