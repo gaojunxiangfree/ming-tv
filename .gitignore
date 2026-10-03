@@ -16,6 +16,7 @@ local.properties
 /*.m3u
 /*.json
 !/test_config.json
+!/version.json
 
 ### 签名文件: 仅本地保留, 请务必离线备份(丢失后无法再发升级包) ###
 *.keystore

@@ -1,0 +1,7 @@
+{
+  "versionCode": 10000,
+  "versionName": "1.0.0",
+  "apkUrl": "https://raw.githubusercontent.com/gaojunxiangfree/ming-tv/main/release/ming-tv-v1.0.0.apk",
+  "notes": "首个正式版：页面齐备，直播可播放，支持在线升级",
+  "force": false
+}

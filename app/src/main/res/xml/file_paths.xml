@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FileProvider 可共享目录: 升级包下载到 cache/apk 后交给系统安装器 -->
+<paths>
+    <cache-path
+        name="apk"
+        path="apk/" />
+</paths>

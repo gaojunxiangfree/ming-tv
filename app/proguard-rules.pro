@@ -10,6 +10,8 @@
 -keep class com.seanming.player.bean.** { *; }
 # Spider jar 反射入口必须保留签名
 -keep public class com.github.catvod.spider.** { public *; }
+# 爬虫基类: 被 jar 内加密代码硬引用, 不能被裁剪或改名
+-keep class com.github.catvod.crawler.** { *; }
 -keepclassmembers class * { public <init>(...); }
 # QuickJS
 -keep class com.whl.quickjs.** { *; }
