@@ -71,6 +71,10 @@ public class PrefUtils {
     public static final String K_SPLASH_POEM = "splash_poem";
     /** 开屏背景图 URL(为空则使用默认渐变背景) */
     public static final String K_SPLASH_BG = "splash_bg";
+    /** 开屏语音播报开关: "1"开 / "0"关 */
+    public static final String K_SPLASH_TTS_ON = "splash_tts_on";
+    /** 自定义播报内容(为空则播报默认问候语) */
+    public static final String K_SPLASH_TTS_TEXT = "splash_tts_text";
 
     /** 默认播放器内核 */
     public static final String PLAYER_EXO = "exo";

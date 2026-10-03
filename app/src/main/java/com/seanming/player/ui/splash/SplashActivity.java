@@ -89,8 +89,14 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     /** 打开 App 时用系统 TTS 播报问候语.
-     *  部分电视盒子/投影仪未内置 TTS 引擎, 此时静默跳过, 不能影响开屏与进入首页. */
+     *  开关与内容均可在设置页配置; 部分电视盒子/投影仪未内置 TTS 引擎,
+     *  此时静默跳过, 不能影响开屏与进入首页. */
     private void speakGreeting() {
+        if ("0".equals(PrefUtils.get(PrefUtils.K_SPLASH_TTS_ON, "1"))) {
+            Log.i(TAG, "开屏语音播报已关闭, 跳过");
+            return;
+        }
+        final String greeting = greetingText();
         try {
             tts = new TextToSpeech(getApplicationContext(), status -> {
                 if (tts == null) return;
@@ -99,10 +105,11 @@ public class SplashActivity extends AppCompatActivity {
                     releaseTts();
                     return;
                 }
-                // 问候语是英文: 优先美式英语, 引擎不支持时退回系统默认语言(尽力朗读)
-                int lang = tts.setLanguage(Locale.US);
+                // 按内容挑语言: 中文文本用中文引擎, 其余用美式英语; 不支持时退回系统默认语言
+                Locale want = isChinese(greeting) ? Locale.CHINA : Locale.US;
+                int lang = tts.setLanguage(want);
                 if (lang == TextToSpeech.LANG_MISSING_DATA || lang == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.w(TAG, "TTS 不支持美式英语, 退回系统默认语言: result=" + lang);
+                    Log.w(TAG, "TTS 不支持 " + want + ", 退回系统默认语言: result=" + lang);
                     tts.setLanguage(Locale.getDefault());
                 }
                 // 强制走媒体音量通道: 电视/投影仪上默认通道可能被静音或路由异常
@@ -123,15 +130,31 @@ public class SplashActivity extends AppCompatActivity {
                         Log.w(TAG, "TTS 播报失败: " + utteranceId);
                     }
                 });
-                String greeting = getString(R.string.tts_greeting);
+                Log.i(TAG, "TTS 语言=" + want + ", 内容=\"" + greeting + "\"");
                 int ret = tts.speak(greeting, TextToSpeech.QUEUE_FLUSH, null, TTS_GREETING_ID);
-                Log.i(TAG, "TTS speak(\"" + greeting + "\") -> " + ret);
+                Log.i(TAG, "TTS speak 返回=" + ret);
             });
         } catch (Throwable t) {
             // 无 TTS 引擎等异常情况: 降级为静默, 不影响开屏流程
             Log.w(TAG, "TTS 不可用, 跳过语音播报", t);
             releaseTts();
         }
+    }
+
+    /** 播报内容: 设置页自定义优先, 留空则用默认问候语 */
+    private String greetingText() {
+        String custom = PrefUtils.get(PrefUtils.K_SPLASH_TTS_TEXT, "");
+        if (custom != null && !custom.trim().isEmpty()) return custom.trim();
+        return getString(R.string.tts_greeting);
+    }
+
+    /** 文本是否含中文(决定用中文还是英文引擎朗读) */
+    private static boolean isChinese(String text) {
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c >= 0x4E00 && c <= 0x9FFF) return true;
+        }
+        return false;
     }
 
     private void releaseTts() {
