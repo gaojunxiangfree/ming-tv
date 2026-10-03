@@ -16,7 +16,6 @@ import com.seanming.player.R;
 import com.seanming.player.api.ApiConfig;
 import com.seanming.player.data.AppDatabase;
 import com.seanming.player.server.WifiConfigServer;
-import com.seanming.player.ui.update.Updater;
 import com.seanming.player.util.PrefUtils;
 import com.seanming.player.util.TextScaleUtil;
 import com.seanming.player.util.ThreadUtils;
@@ -46,8 +45,6 @@ public class SettingsActivity extends AppCompatActivity {
     private LinearLayout loopContainer;
     private LinearLayout p2pContainer;
     private LinearLayout dataContainer;
-    private TextView tvAppVersion;
-    private LinearLayout aboutContainer;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -71,8 +68,6 @@ public class SettingsActivity extends AppCompatActivity {
         loopContainer = findViewById(R.id.loopContainer);
         p2pContainer = findViewById(R.id.p2pContainer);
         dataContainer = findViewById(R.id.dataContainer);
-        tvAppVersion = findViewById(R.id.tvAppVersion);
-        aboutContainer = findViewById(R.id.aboutContainer);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.btnLoadApi).setOnClickListener(v -> loadApi());
@@ -83,7 +78,6 @@ public class SettingsActivity extends AppCompatActivity {
         renderPlayerSection();
         renderPlayToggles();
         renderDataSection();
-        renderAboutSection();
         renderStyleSections();
         renderTextScale();
         renderSplashSettings();
@@ -344,39 +338,6 @@ public class SettingsActivity extends AppCompatActivity {
                     .show();
         });
         dataContainer.addView(tv);
-    }
-
-    // ================= 关于 / 升级 =================
-
-    /** 关于: 当前版本 + 手动检查更新 */
-    private void renderAboutSection() {
-        if (aboutContainer == null) return;
-        tvAppVersion.setText("茗影院 · 当前版本 " + Updater.installedVersion(this));
-        aboutContainer.removeAllViews();
-        TextView btn = (TextView) LayoutInflater.from(this)
-                .inflate(R.layout.item_tab, aboutContainer, false);
-        btn.setText("检查更新");
-        addFocus(btn);
-        btn.setOnClickListener(v -> {
-            Toast.makeText(this, "正在检查更新…", Toast.LENGTH_SHORT).show();
-            Updater.check(this, new Updater.CheckCallback() {
-                @Override
-                public void onResult(Updater.Info info) {
-                    if (info == null) {
-                        Toast.makeText(SettingsActivity.this, "已是最新版本", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Updater.showDialog(SettingsActivity.this, info, true);
-                    }
-                }
-
-                @Override
-                public void onError(Throwable t) {
-                    Toast.makeText(SettingsActivity.this, "检查更新失败: " + t.getMessage(),
-                            Toast.LENGTH_LONG).show();
-                }
-            });
-        });
-        aboutContainer.addView(btn);
     }
 
     // ================= 播放样式设置 =================

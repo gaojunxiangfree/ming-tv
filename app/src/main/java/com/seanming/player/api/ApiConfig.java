@@ -360,8 +360,26 @@ public class ApiConfig {
         }
     }
 
-    /** 默认首页站点: 优先"秒播/速播/瞬播"直链站, 否则取第一个站点 */
+    /**
+     * 首页默认站点优选顺序(实测能正常出内容的站点), 按名称关键字命中即用.
+     * 注意: "秒播"类里有坏源(如 韩剧┃秒播 长期因源侧异常加载失败),
+     * 所以把它排在优选之后, 避免全新安装一进首页就是"加载失败".
+     */
+    private static final String[] PREFERRED_DEFAULT_SITES = {
+            "賤片", "伯伯", "木偶", "爱看",
+    };
+
+    /** 默认首页站点: 优先实测可用站, 再挑"秒播/速播/瞬播"直链站, 最后取第一个站点 */
     private String findDefaultSiteKey() {
+        for (String prefer : PREFERRED_DEFAULT_SITES) {
+            for (Site s : sites) {
+                String name = s.getName();
+                if (name != null && name.contains(prefer)) {
+                    android.util.Log.i("ApiConfig", "findDefaultSiteKey -> 优选站: " + s.getKey() + " / " + name);
+                    return s.getKey();
+                }
+            }
+        }
         for (Site s : sites) {
             String name = s.getName();
             if (name != null && (name.contains("秒播") || name.contains("速播") || name.contains("瞬播"))) {
@@ -369,7 +387,7 @@ public class ApiConfig {
                 return s.getKey();
             }
         }
-        android.util.Log.i("ApiConfig", "findDefaultSiteKey -> 无秒播站, 取第一个: " + sites.get(0).getKey());
+        android.util.Log.i("ApiConfig", "findDefaultSiteKey -> 无常驻可用站, 取第一个: " + sites.get(0).getKey());
         return sites.get(0).getKey();
     }
 

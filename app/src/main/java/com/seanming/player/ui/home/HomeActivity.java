@@ -36,7 +36,6 @@ import com.seanming.player.ui.live.LiveActivity;
 import com.seanming.player.ui.push.PushActivity;
 import com.seanming.player.ui.search.SearchActivity;
 import com.seanming.player.ui.settings.SettingsActivity;
-import com.seanming.player.ui.update.Updater;
 import com.seanming.player.util.ThreadUtils;
 import com.seanming.player.util.ScreenUtil;
 
@@ -149,23 +148,6 @@ public class HomeActivity extends AppCompatActivity {
         loadHome();
         // 启动实时时钟
         clockHandler.post(clockTicker);
-        // 静默检查升级(延迟到首页数据加载之后, 不打扰启动)
-        clockHandler.postDelayed(this::checkUpdate, 3000L);
-    }
-
-    /** 静默检查升级: 有新版本才弹提示, 失败不打扰用户 */
-    private void checkUpdate() {
-        Updater.check(this, new Updater.CheckCallback() {
-            @Override
-            public void onResult(Updater.Info info) {
-                if (info != null) Updater.showDialog(HomeActivity.this, info, false);
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                android.util.Log.i("HomeActivity", "check update failed: " + t);
-            }
-        });
     }
 
     @Override

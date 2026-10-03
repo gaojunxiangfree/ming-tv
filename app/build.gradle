@@ -42,8 +42,10 @@ android {
             versionNameSuffix '-debug'
         }
         release {
-            minifyEnabled true
-            shrinkResources true
+            // 必须关闭混淆: 爬虫 jar 在运行时由外部加载, 会按原类名反射 gson/okhttp3 等库类,
+            // R8 重命名这些类后会出现 NoClassDefFoundError 导致所有站点初始化失败
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (keystoreFile.exists()) signingConfig signingConfigs.release
         }
@@ -69,14 +71,6 @@ androidComponents {
         }
     }
 }
-
-// assembleRelease 后自动归档到 release/, 供 App 在线升级下载
-tasks.register('archiveReleaseApk', Copy) {
-    from layout.buildDirectory.dir('outputs/apk/release')
-    include '*.apk'
-    into rootProject.layout.projectDirectory.dir('release')
-}
-tasks.matching { it.name == 'assembleRelease' }.configureEach { finalizedBy 'archiveReleaseApk' }
 
 dependencies {
     // 播放内核: Media3 ExoPlayer
