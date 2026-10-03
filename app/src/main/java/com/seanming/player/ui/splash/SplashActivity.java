@@ -1,9 +1,13 @@
 package com.seanming.player.ui.splash;
 
 import android.content.Intent;
+import android.media.AudioAttributes;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -18,9 +22,17 @@ import com.seanming.player.ui.home.HomeActivity;
 import com.seanming.player.util.ImageUtil;
 import com.seanming.player.util.PrefUtils;
 
+import java.util.Locale;
+
 /** 开屏页: 可配置的情话 + 背景图.
- *  情话可开启/关闭、内容可自定义; 背景图可设置 URL; 右上角支持跳过. */
+ *  情话可开启/关闭、内容可自定义; 背景图可设置 URL; 进入时语音播报一句问候. */
 public class SplashActivity extends AppCompatActivity {
+
+    private static final String TAG = "SplashActivity";
+    private static final String TTS_GREETING_ID = "splash_greeting";
+
+    /** 开屏语音播报的 TTS 实例, 系统无 TTS 引擎时为 null */
+    private TextToSpeech tts;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -63,8 +75,74 @@ public class SplashActivity extends AppCompatActivity {
             fadeIn(R.id.tvSplashSub, 800, 800);
         }
 
+        // 打开 App 时播报一句问候
+        speakGreeting();
+
         // 到达停留时长后进入首页
         new Handler(Looper.getMainLooper()).postDelayed(this::goHome, 5500);
+    }
+
+    @Override
+    protected void onDestroy() {
+        releaseTts();
+        super.onDestroy();
+    }
+
+    /** 打开 App 时用系统 TTS 播报问候语.
+     *  部分电视盒子/投影仪未内置 TTS 引擎, 此时静默跳过, 不能影响开屏与进入首页. */
+    private void speakGreeting() {
+        try {
+            tts = new TextToSpeech(getApplicationContext(), status -> {
+                if (tts == null) return;
+                if (status != TextToSpeech.SUCCESS) {
+                    Log.w(TAG, "TTS 初始化失败, 跳过语音播报: status=" + status);
+                    releaseTts();
+                    return;
+                }
+                // 问候语是英文: 优先美式英语, 引擎不支持时退回系统默认语言(尽力朗读)
+                int lang = tts.setLanguage(Locale.US);
+                if (lang == TextToSpeech.LANG_MISSING_DATA || lang == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Log.w(TAG, "TTS 不支持美式英语, 退回系统默认语言: result=" + lang);
+                    tts.setLanguage(Locale.getDefault());
+                }
+                // 强制走媒体音量通道: 电视/投影仪上默认通道可能被静音或路由异常
+                tts.setAudioAttributes(new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build());
+                tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    @Override public void onStart(String utteranceId) {
+                        Log.i(TAG, "TTS 开始播报: " + utteranceId);
+                    }
+
+                    @Override public void onDone(String utteranceId) {
+                        Log.i(TAG, "TTS 播报完成: " + utteranceId);
+                    }
+
+                    @Override public void onError(String utteranceId) {
+                        Log.w(TAG, "TTS 播报失败: " + utteranceId);
+                    }
+                });
+                String greeting = getString(R.string.tts_greeting);
+                int ret = tts.speak(greeting, TextToSpeech.QUEUE_FLUSH, null, TTS_GREETING_ID);
+                Log.i(TAG, "TTS speak(\"" + greeting + "\") -> " + ret);
+            });
+        } catch (Throwable t) {
+            // 无 TTS 引擎等异常情况: 降级为静默, 不影响开屏流程
+            Log.w(TAG, "TTS 不可用, 跳过语音播报", t);
+            releaseTts();
+        }
+    }
+
+    private void releaseTts() {
+        if (tts != null) {
+            try {
+                tts.stop();
+                tts.shutdown();
+            } catch (Throwable ignored) {
+            }
+            tts = null;
+        }
     }
 
     private void goHome() {
