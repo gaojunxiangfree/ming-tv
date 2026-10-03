@@ -28,6 +28,8 @@ public class IjkKernel implements PlayerKernel {
     private boolean playWhenReady = true;
     private String pendingUrl;
     private Map<String, String> pendingHeaders;
+    /** 从请求头里摘出的 UA, 单独走 ffmpeg 的 user_agent 选项下发(影视仓同款做法) */
+    private String pendingUserAgent;
     private long pendingStartMs;
     private float pendingSpeed = 1.0f;
 
@@ -70,15 +72,7 @@ public class IjkKernel implements PlayerKernel {
 
         // 创建 IjkMediaPlayer 并配置解码选项
         player = new IjkMediaPlayer();
-        int mc = hardwareDecode ? 1 : 0;
-        // 硬解: 开启 mediacodec, 软解: 关闭 mediacodec 走 FFmpeg
-        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", mc);
-        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-auto-rotate", mc);
-        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-handle-resolution-change", mc);
-        // 启动阶段不分片预读, 加快首帧
-        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "fflags", "fastseek");
-        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 1);
-        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 0);
+        applyOptions();
 
         // 状态监听
         player.setOnPreparedListener(mp -> {
@@ -128,11 +122,73 @@ public class IjkKernel implements PlayerKernel {
         }
     }
 
+    /**
+     * 下发 IJK 播放选项(对齐影视仓 com.androidx.zx.OooOo0O 的配置).
+     *
+     * 注意: IjkMediaPlayer.reset() 会连带清空此前 setOption 下发的全部选项,
+     * 所以每次 prepare 前(即 reset() 之后)都必须重新调用本方法,
+     * 否则硬解/HLS 相关选项全部失效.
+     */
+    private void applyOptions() {
+        if (player == null) return;
+        // 硬解: 1 开启 mediacodec, 软解: 0 走 FFmpeg
+        int mc = hardwareDecode ? 1 : 0;
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "subtitle", 1);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "dns_cache_clear", 1);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "dns_cache_timeout", -1);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_CODEC, "skip_loop_filter", 48);
+        // 启动阶段不分片预读, 加快首帧
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "fflags", "fastseek");
+        // 探测 range 支持会拖慢部分 CDN
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "http-detect-range-support", 0);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 0);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "framedrop", 1);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "max-buffer-size", 15 * 1024 * 1024);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "opensles", 0);
+        // SDL_FCC_RV32 = 842225234
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "overlay-format", 842225234L);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "reconnect", 1);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", 1);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 1);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", mc);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-auto-rotate", mc);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-handle-resolution-change", mc);
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-hevc", mc);
+        // UA 单独下发(影视仓同款): ffmpeg 的 http 从 user_agent 选项取 UA,
+        // 若再在 headers 里塞一个 User-Agent 会与之冲突, 因此 setDataSource 里已把它摘出来
+        if (pendingUserAgent != null && !pendingUserAgent.isEmpty()) {
+            player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "user_agent", pendingUserAgent);
+        }
+        // HLS 的 AES-128 加密分片会被 ffmpeg 以 crypto+https://... 打开,
+        // 协议白名单里必须包含 crypto(以及依赖的 http/https/tcp/tls), 否则分片全部打不开;
+        // allowed_extensions 放开扩展名限制, 避免带查询串的 .ts 分片被拒.
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "protocol_whitelist",
+                "async,cache,crypto,file,http,https,ijkhttphook,ijkinject,ijklivehook,"
+                        + "ijklongurl,ijksegment,ijktcphook,pipe,rtp,tcp,tls,udp,ijkurlhook,data");
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "allowed_extensions", "ALL");
+    }
+
     @Override
     public void setDataSource(String url, Map<String, String> headers, long startPosMs) {
         this.pendingUrl = url;
         this.pendingHeaders = headers;
         this.pendingStartMs = startPosMs;
+        // 影视仓做法: 把 User-Agent 从 headers 里摘出来, 单独走 ffmpeg 的 user_agent 选项,
+        // 避免两个 UA 来源冲突导致部分 CDN 拒绝请求.
+        // 注意: 这里复制一份, 不改动调用方(PlayActivity)传入的 map,
+        // 否则内核回退到 Exo 时请求头会缺 UA.
+        this.pendingUserAgent = null;
+        if (headers != null && !headers.isEmpty()) {
+            Map<String, String> copy = new java.util.HashMap<>(headers);
+            for (String k : copy.keySet()) {
+                if (k != null && k.equalsIgnoreCase("User-Agent")) {
+                    pendingUserAgent = copy.get(k);
+                    break;
+                }
+            }
+            if (pendingUserAgent != null) copy.remove("User-Agent");
+            this.pendingHeaders = copy;
+        }
         if (player != null) {
             applyDataSource();
         }
@@ -143,6 +199,8 @@ public class IjkKernel implements PlayerKernel {
         try {
             prepared = false;
             player.reset();
+            // reset() 会清空所有 option, 必须在 setDataSource 之前重新下发
+            applyOptions();
             // 重置后需要重新设置 Surface, 否则黑屏
             if (surfaceView != null) {
                 SurfaceHolder h = surfaceView.getHolder();
