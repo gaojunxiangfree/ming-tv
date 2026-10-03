@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android TV 桌面横幅(320x180): 绿色渐变底 + 电视机 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <path android:pathData="M0,0 h320 v180 h-320 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="320"
+                android:endY="180"
+                android:type="linear">
+                <item android:offset="0" android:color="#FF22C55E" />
+                <item android:offset="1" android:color="#FF065F46" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 天线 -->
+    <path
+        android:pathData="M138,55 L120,32"
+        android:strokeColor="#FFF2FFF7"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M182,55 L200,32"
+        android:strokeColor="#FFF2FFF7"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+
+    <!-- 机身(屏幕) -->
+    <path
+        android:pathData="M113,55 h94 a8,8 0 0 1 8,8 v64 a8,8 0 0 1 -8,8 h-94 a8,8 0 0 1 -8,-8 v-64 a8,8 0 0 1 8,-8 z"
+        android:fillColor="#FF06301C"
+        android:strokeColor="#FFF2FFF7"
+        android:strokeWidth="7" />
+
+    <!-- 播放键 -->
+    <path
+        android:pathData="M142,80 L180,95 L142,110 z"
+        android:fillColor="#FF4ADE80" />
+
+    <!-- 底座 -->
+    <path
+        android:pathData="M160,135 L160,148"
+        android:strokeColor="#FFF2FFF7"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M136,152 L184,152"
+        android:strokeColor="#FFF2FFF7"
+        android:strokeWidth="9"
+        android:strokeLineCap="round" />
+</vector>
