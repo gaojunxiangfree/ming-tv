@@ -532,6 +532,80 @@ public class SettingsActivity extends AppCompatActivity {
             row2.addView(btnResetPoem);
         }
 
+        // ---- 语音播报开关 ----
+        boolean ttsOn = !"0".equals(PrefUtils.get(PrefUtils.K_SPLASH_TTS_ON, "1"));
+
+        TextView labelTts = new TextView(this);
+        labelTts.setText("开屏语音播报 (进入 App 时朗读一句)");
+        labelTts.setTextSize(24);
+        labelTts.setTextColor(getColor(R.color.sm_text));
+        labelTts.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        labelTts.setPadding(0, 16, 0, 4);
+        splashContainer.addView(labelTts);
+
+        LinearLayout ttsRow = new LinearLayout(this);
+        ttsRow.setOrientation(LinearLayout.HORIZONTAL);
+        splashContainer.addView(ttsRow);
+        for (String[] p : toggles) {
+            TextView tv = (TextView) LayoutInflater.from(this).inflate(R.layout.item_tab, ttsRow, false);
+            boolean sel = ttsOn == "1".equals(p[0]);
+            tv.setText(p[1] + (sel ? " (当前)" : ""));
+            tv.setSelected(sel);
+            addFocus(tv);
+            tv.setOnClickListener(v -> {
+                PrefUtils.put(PrefUtils.K_SPLASH_TTS_ON, p[0]);
+                renderSplashSettings();
+            });
+            ttsRow.addView(tv);
+        }
+
+        // ---- 自定义播报内容 ----
+        if (ttsOn) {
+            TextView labelTtsText = new TextView(this);
+            labelTtsText.setText("自定义播报内容 (留空则播报: " + getString(R.string.tts_greeting) + ")");
+            labelTtsText.setTextSize(24);
+            labelTtsText.setTextColor(getColor(R.color.sm_text));
+            labelTtsText.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            labelTtsText.setPadding(0, 16, 0, 4);
+            splashContainer.addView(labelTtsText);
+
+            android.widget.EditText etTts = new android.widget.EditText(this);
+            etTts.setText(PrefUtils.get(PrefUtils.K_SPLASH_TTS_TEXT, ""));
+            etTts.setHint("示例: 欢迎回家, 茗雅");
+            etTts.setTextSize(24);
+            etTts.setTextColor(getColor(R.color.sm_text));
+            etTts.setHintTextColor(getColor(R.color.sm_text_dim));
+            etTts.setSingleLine(true);
+            etTts.setBackground(getDrawable(R.drawable.bg_search_box));
+            etTts.setPadding(24, 24, 24, 24);
+            splashContainer.addView(etTts);
+
+            LinearLayout rowTts = new LinearLayout(this);
+            rowTts.setOrientation(LinearLayout.HORIZONTAL);
+            rowTts.setPadding(0, 12, 0, 0);
+            splashContainer.addView(rowTts);
+            TextView btnSaveTts = (TextView) LayoutInflater.from(this)
+                    .inflate(R.layout.item_tab, rowTts, false);
+            btnSaveTts.setText("保存播报内容");
+            addFocus(btnSaveTts);
+            btnSaveTts.setOnClickListener(v -> {
+                PrefUtils.put(PrefUtils.K_SPLASH_TTS_TEXT, etTts.getText().toString().trim());
+                Toast.makeText(this, "播报内容已保存, 下次打开 App 生效", Toast.LENGTH_SHORT).show();
+            });
+            rowTts.addView(btnSaveTts);
+
+            TextView btnResetTts = (TextView) LayoutInflater.from(this)
+                    .inflate(R.layout.item_tab, rowTts, false);
+            btnResetTts.setText("恢复默认");
+            addFocus(btnResetTts);
+            btnResetTts.setOnClickListener(v -> {
+                PrefUtils.put(PrefUtils.K_SPLASH_TTS_TEXT, "");
+                etTts.setText("");
+                Toast.makeText(this, "已恢复默认播报内容", Toast.LENGTH_SHORT).show();
+            });
+            rowTts.addView(btnResetTts);
+        }
+
         // ---- 背景图 ----
         TextView label3 = new TextView(this);
         label3.setText("背景图 URL (留空为默认渐变)");
