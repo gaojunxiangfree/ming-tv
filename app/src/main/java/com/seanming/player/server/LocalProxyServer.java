@@ -53,25 +53,53 @@ public class LocalProxyServer {
         if (running) return;
         running = true;
         new Thread(() -> {
-            try {
-                serverSocket = new ServerSocket(PORT, 50, InetAddress.getByName("127.0.0.1"));
-                port = PORT;
-                Log.i(TAG, "local proxy listening on 127.0.0.1:" + port);
-            } catch (Throwable t) {
-                // 端口被占用(例如真机上同时开着影视仓)时无法提供服务
-                Log.e(TAG, "bind 127.0.0.1:" + PORT + " failed: " + t.getMessage());
-                running = false;
-                return;
-            }
-            while (running) {
+            // 9978 常被其它应用(如影视仓)占用. 端口被占时我们无法应答爬虫的
+            // /proxy?do=ck 端口探测, 爬虫就会从 9978 起逐个端口扫描; 而该探测由
+            // 爬虫投递到主线程 Looper 上执行, 每次探测都可能阻塞到 socket 超时,
+            // 导致 "Input dispatching timed out" ANR. 因此必须尽快抢到端口.
+            boolean warned = false;
+            while (running && !bind()) {
+                if (!warned) {
+                    Log.w(TAG, "127.0.0.1:" + PORT + " 被占用(可能是影视仓正在运行), 每 1s 重试");
+                    warned = true;
+                }
                 try {
-                    Socket client = serverSocket.accept();
-                    ThreadUtils.io(() -> handle(client));
-                } catch (Throwable t) {
-                    if (!running) break;
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return;
                 }
             }
+            if (!running) return;
+            acceptLoop();
         }, "local-proxy").start();
+    }
+
+    /** 绑定 127.0.0.1:9978; 端口被占用返回 false */
+    private boolean bind() {
+        try {
+            serverSocket = new ServerSocket(PORT, 50, InetAddress.getByName("127.0.0.1"));
+            port = PORT;
+            Log.i(TAG, "local proxy listening on 127.0.0.1:" + port);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private void acceptLoop() {
+        while (running) {
+            try {
+                Socket client = serverSocket.accept();
+                ThreadUtils.io(() -> handle(client));
+            } catch (Throwable t) {
+                if (!running) break;
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
     }
 
     public void stop() {

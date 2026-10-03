@@ -223,6 +223,19 @@ public class SpiderManager {
      */
     public static Object[] proxyLocal(java.util.Map<String, String> params) {
         String key = params == null ? null : params.get("do");
+        // 端口探测握手: 影视仓/爬虫用 /proxy?do=ck 从 9978 起逐个端口探测本机代理,
+        // 只有响应体恰好是 "ok" 才认定该端口(见影视仓 PythonLoader.getPort):
+        //     for (int i = 9978; i < 10000; i++)
+        //         if (get("http://127.0.0.1:" + i + "/proxy?do=ck&api=python").equals("ok")) ...
+        // 关键: 必须在这里直接原样返回 "ok", 不能交给爬虫 jar 处理.
+        // 否则爬虫拿不到端口 -> 继续扫 22 个端口, 每次探测都可能阻塞到 socket 超时;
+        // 而该探测是爬虫通过主线程 Looper 的 Handler 发起的 ->
+        // 主线程被同步 HTTP 卡住数秒 -> "Input dispatching timed out" ANR -> 系统杀掉应用.
+        if ("ck".equals(key)) {
+            android.util.Log.i("SpiderManager", "proxyLocal do=ck -> ok (端口握手)");
+            return new Object[]{200, "text/plain; charset=utf-8",
+                    "ok".getBytes(java.nio.charset.StandardCharsets.UTF_8), null};
+        }
         Spider target = key == null ? null : SPIDERS.get(key);
         if (target instanceof ReflectSpider) {
             Object[] r = ((ReflectSpider) target).proxyInvoke(params);
