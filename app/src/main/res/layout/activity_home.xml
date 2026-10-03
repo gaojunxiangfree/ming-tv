@@ -45,7 +45,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:text="© Sean Gao 版权所有 · 茗雅专属 · 禁止商用，后果自负"
+                android:text="本应用由 Sean Gao 开源 · 仅供开发与测试使用 · 禁止商用 · 违者后果自负"
                 android:textSize="18sp"
                 android:textColor="@color/sm_text_dim" />
         </LinearLayout>
