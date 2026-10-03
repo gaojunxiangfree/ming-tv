@@ -295,11 +295,11 @@ public class ApiConfig {
             Site site = gson.fromJson(clean, Site.class);
             site.setExt(extStr);
             if (site.getName() == null) site.setName(site.getKey());
-            // 只过滤 api 为空的占位站点.
-            // 注意: 影视仓不按 changeable 过滤, "自定义/看球/儿歌/KTV/配置中心" 等
-            // changeable=0 的站点同样保留并可切换, 这里对齐影视仓行为.
+            // 过滤不可切换源(changeable 显式为 0)和纯 jar 占位站点(api为空)
+            // 注意: TVBox 接口常省略 changeable 字段, 此时默认为可切换
+            boolean explicitNoChange = o.has("changeable") && o.get("changeable").getAsInt() == 0;
             boolean noApi = site.getApi() == null || site.getApi().isEmpty();
-            if (noApi) continue;
+            if (explicitNoChange || noApi) continue;
             sites.add(site);
         }
 
