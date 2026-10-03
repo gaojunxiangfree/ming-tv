@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">茗影院</string>
     <string name="app_signature">茗雅专属 · 私人定制</string>
+    <string name="tts_greeting">Hello XiaoMing</string>
     <string name="nav_home">首页</string>
     <string name="nav_live">直播</string>
     <string name="nav_search">搜索</string>
