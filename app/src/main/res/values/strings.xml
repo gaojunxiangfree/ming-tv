@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">茗影院</string>
+    <string name="app_signature">茗雅专属 · 私人定制</string>
+    <string name="nav_home">首页</string>
+    <string name="nav_live">直播</string>
+    <string name="nav_search">搜索</string>
+    <string name="nav_favorite">收藏</string>
+    <string name="nav_history">历史</string>
+    <string name="nav_settings">设置</string>
+    <string name="settings_api">接口配置</string>
+    <string name="settings_api_hint">输入接口地址后按确定加载</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_animations">动画效果</string>
+    <string name="search_hint">输入片名搜索</string>
+    <string name="detail_play">播放</string>
+    <string name="detail_favorite">收藏</string>
+    <string name="detail_unfavorite">取消收藏</string>
+    <string name="msg_no_api">请先在设置中配置接口地址</string>
+    <string name="msg_loading">加载中…</string>
+    <string name="msg_load_failed">加载失败，请检查接口或网络</string>
+</resources>

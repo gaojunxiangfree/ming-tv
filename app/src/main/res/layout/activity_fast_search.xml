@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/sm_safe_edge"
+    android:paddingRight="@dimen/sm_safe_edge">
+
+    <!-- 顶部: 返回 + 关键词 + 搜索(回车/确定键触发) -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="18dp"
+        android:paddingBottom="10dp">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_button_selector"
+            android:paddingLeft="24dp"
+            android:paddingTop="8dp"
+            android:paddingRight="24dp"
+            android:paddingBottom="8dp"
+            android:focusable="true"
+            android:text="返回"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+
+        <!-- 搜索进度(对齐影视仓): 搜索(命中源数/总源数) -->
+        <TextView
+            android:id="@+id/tvProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="18dp"
+            android:minWidth="200dp"
+            android:singleLine="true"
+            android:text="搜索(0/0)"
+            android:textColor="@color/sm_primary"
+            android:textSize="@dimen/sm_text_body"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etKeyword"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@drawable/bg_search_box"
+            android:padding="12dp"
+            android:hint="@string/search_hint"
+            android:textColorHint="@color/sm_text_dim"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text"
+            android:singleLine="true"
+            android:imeOptions="actionSearch" />
+
+        <TextView
+            android:id="@+id/btnSearch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_button_selector"
+            android:paddingLeft="24dp"
+            android:paddingTop="8dp"
+            android:paddingRight="24dp"
+            android:paddingBottom="8dp"
+            android:focusable="true"
+            android:text="搜索"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+    </LinearLayout>
+
+    <!-- 来源筛选行(全部 + 各命中源), 遥控器左右键可切换 -->
+    <HorizontalScrollView
+        android:id="@+id/sourceScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/topBar"
+        android:focusable="false"
+        android:descendantFocusability="afterDescendants"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/sourceContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="4dp"
+            android:paddingBottom="8dp" />
+    </HorizontalScrollView>
+
+    <!-- 聚合结果网格 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvResult"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/sourceScroll"
+        android:layout_marginTop="4dp"
+        android:focusable="true"
+        android:clipToPadding="false"
+        android:paddingTop="6dp" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textSize="@dimen/sm_text_body"
+        android:textColor="@color/sm_text_dim"
+        android:visibility="gone" />
+</RelativeLayout>

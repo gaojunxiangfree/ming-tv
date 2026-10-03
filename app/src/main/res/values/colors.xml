@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 茗影院 深色科技感主题 -->
+    <color name="sm_bg">#0A0E1A</color>
+    <color name="sm_bg_gradient_end">#101630</color>
+    <color name="sm_surface">#141A2E</color>
+    <color name="sm_surface_light">#1D2542</color>
+    <color name="sm_primary">#22D3EE</color>
+    <color name="sm_primary_dark">#0E9BB5</color>
+    <color name="sm_violet">#7C6CFF</color>
+    <color name="sm_gold">#FFC857</color>
+    <color name="sm_text">#EDF2FF</color>
+    <color name="sm_text_dim">#8A93B2</color>
+    <color name="sm_focus_stroke">#22D3EE</color>
+    <color name="sm_focus_glow">#5522D3EE</color>
+    <color name="sm_episode_bg">#1A2140</color>
+    <color name="sm_live_divider">#1F2745</color>
+</resources>

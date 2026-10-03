@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="备注名称(如: 我的WebDAV)"
+            android:inputType="text"
+            android:singleLine="true"
+            android:textColor="@color/sm_text"
+            android:textColorHint="@color/sm_text_dim" />
+
+        <RadioGroup
+            android:id="@+id/rgType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rbWebdav"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="WebDAV"
+                android:textColor="@color/sm_text" />
+
+            <RadioButton
+                android:id="@+id/rbAlist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:text="AList"
+                android:textColor="@color/sm_text" />
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/etUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="地址, 如 http://192.168.1.9:5244"
+            android:inputType="textUri"
+            android:singleLine="true"
+            android:textColor="@color/sm_text"
+            android:textColorHint="@color/sm_text_dim" />
+
+        <EditText
+            android:id="@+id/etUser"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="用户名(可留空)"
+            android:inputType="text"
+            android:singleLine="true"
+            android:textColor="@color/sm_text"
+            android:textColorHint="@color/sm_text_dim" />
+
+        <EditText
+            android:id="@+id/etPwd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="密码(可留空)"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textColor="@color/sm_text"
+            android:textColorHint="@color/sm_text_dim" />
+
+        <EditText
+            android:id="@+id/etInitPath"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="初始路径(可留空, 默认根目录)"
+            android:inputType="text"
+            android:singleLine="true"
+            android:textColor="@color/sm_text"
+            android:textColorHint="@color/sm_text_dim" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,21 @@
+{
+  "sites": [
+    {
+      "key": "dbzy",
+      "name": "豆瓣资源",
+      "type": 1,
+      "api": "https://api.apibdzy.com/api.php/provide/vod/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    }
+  ],
+  "lives": [
+    {
+      "name": "综合直播",
+      "type": 0,
+      "url": "http://10.0.2.2:8765/test_live.m3u",
+      "playerType": 2
+    }
+  ]
+}

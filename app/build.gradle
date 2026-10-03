@@ -1,0 +1,95 @@
+plugins {
+    id 'com.android.application'
+}
+
+def keystoreFile = rootProject.file('seanming.keystore')
+
+android {
+    namespace 'com.seanming.player'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.seanming.player"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+        ndk { abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64' }
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile.exists()) {
+                storeFile keystoreFile
+                storePassword System.getenv('SEANMING_STORE_PASSWORD') ?: 'seanming'
+                keyAlias System.getenv('SEANMING_KEY_ALIAS') ?: 'seanming'
+                keyPassword System.getenv('SEANMING_KEY_PASSWORD') ?: 'seanming'
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystoreFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    lint { abortOnError false }
+}
+
+dependencies {
+    // 播放内核: Media3 ExoPlayer
+    implementation 'androidx.media3:media3-exoplayer:1.4.1'
+    implementation 'androidx.media3:media3-exoplayer-hls:1.4.1'
+    implementation 'androidx.media3:media3-exoplayer-dash:1.4.1'
+    implementation 'androidx.media3:media3-datasource-okhttp:1.4.1'
+    implementation 'androidx.media3:media3-ui:1.4.1'
+
+    // 播放内核: IJK (软/硬解), 用 CarGuo 在 Maven Central 上的预编译包
+    implementation 'io.github.carguo:gsyijkjava:1.0.0'
+    implementation 'io.github.carguo:gsyvideoplayer-armv7a:13.2.1'
+    implementation 'io.github.carguo:gsyvideoplayer-arm64:13.2.1'
+    implementation 'io.github.carguo:gsyvideoplayer-x64:13.2.1'
+
+    // 网络与解析
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:okhttp-dnsoverhttps:4.12.0'
+    implementation 'com.google.code.gson:gson:2.11.0'
+
+    // 图片加载
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+
+    // 二维码生成(推送页展示局域网地址)
+    implementation 'com.google.zxing:core:3.5.3'
+
+    // 本地数据库
+    implementation 'androidx.room:room-runtime:2.6.1'
+    annotationProcessor 'androidx.room:room-compiler:2.6.1'
+
+    // AndroidX 基础
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.leanback:leanback:1.0.0'
+
+    // Lottie 动画
+    implementation 'com.airbnb.android:lottie:6.4.0'
+
+    // QuickJS: drpy js 爬虫引擎 (二期兼容, 已内置封装)
+    implementation 'wang.harlon.quickjs:wrapper-android:2.1.0'
+
+    // XML 拉解析(苹果cms xml 源)
+    implementation 'xmlpull:xmlpull:1.1.3.1'
+}

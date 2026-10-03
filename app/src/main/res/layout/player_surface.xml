@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 使用 SurfaceView 渲染, 性能优于 TextureView(低内存占用/低延迟),
+     适合在真机/投影仪上播放高清视频; 部分设备 SurfaceView 会拦截整窗触摸,
+     若控制按钮点击失效可切换到 TextureView 渲染. -->
+<androidx.media3.ui.PlayerView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/player_surface_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:surface_type="surface_view"
+    app:use_controller="false" />

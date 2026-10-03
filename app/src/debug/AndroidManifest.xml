@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 仅 debug 构建: 放开 LiveActivity/DriveActivity 供 adb 直接启动以便验证 -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <activity
+            android:name=".ui.live.LiveActivity"
+            android:exported="true"
+            tools:replace="android:exported" />
+        <activity
+            android:name=".ui.drive.DriveActivity"
+            android:exported="true"
+            tools:replace="android:exported" />
+        <activity
+            android:name=".ui.push.PushActivity"
+            android:exported="true"
+            tools:replace="android:exported" />
+    </application>
+</manifest>

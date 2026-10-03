@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- 外环: 电光青 -->
+    <path android:pathData="M54,8 A46,46 0 1 1 53.9,8"
+        android:strokeColor="#22D3EE" android:strokeWidth="5"
+        android:fillColor="#0A0E1A" android:strokeLineCap="round" />
+    <!-- S 弧线 -->
+    <path android:pathData="M70,36 C60,24 38,26 38,40 C38,54 72,50 72,66 C72,80 46,84 36,70"
+        android:strokeColor="#7C6CFF" android:strokeWidth="6"
+        android:fillColor="#00000000" android:strokeLineCap="round" />
+    <!-- 播放三角 -->
+    <path android:pathData="M50,46 L70,54 L50,62 Z"
+        android:fillColor="#22D3EE" />
+</vector>

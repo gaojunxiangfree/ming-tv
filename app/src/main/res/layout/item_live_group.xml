@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tvGroupName"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_live_channel"
+    android:focusable="true"
+    android:clickable="true"
+    android:ellipsize="end"
+    android:maxWidth="240dp"
+    android:singleLine="true"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:layout_marginRight="8dp"
+    android:textSize="@dimen/sm_text_small"
+    android:textColor="@color/sm_text" />

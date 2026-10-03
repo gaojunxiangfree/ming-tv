@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/sm_bg"
+    android:paddingLeft="@dimen/sm_safe_edge"
+    android:paddingRight="@dimen/sm_safe_edge">
+
+    <!-- 顶部: 返回 + 标题 -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="14dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_button_selector"
+            android:paddingLeft="12dp"
+            android:paddingTop="6dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:text="← 返回"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="14dp"
+            android:text="📲 推送到电视"
+            android:textSize="@dimen/sm_text_title"
+            android:textColor="@color/sm_text"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/topBar"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/ivQRCode"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:background="#FFFFFF"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:contentDescription="局域网地址二维码" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="30dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="扫描上方二维码访问地址"
+                android:textSize="@dimen/sm_text_body"
+                android:textColor="@color/sm_primary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="① 手机与电视连接同一 WiFi\n② 扫码打开网页，粘贴视频链接即可在电视播放\n③ 也可直接推送 TVBox 接口地址"
+                android:textSize="@dimen/sm_text_small"
+                android:textColor="@color/sm_text_dim"
+                android:lineSpacingExtra="4dp" />
+
+            <TextView
+                android:id="@+id/btnLocal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_button_selector"
+                android:paddingLeft="20dp"
+                android:paddingTop="8dp"
+                android:paddingRight="20dp"
+                android:paddingBottom="8dp"
+                android:focusable="true"
+                android:text="⌨️ 本地推送"
+                android:textSize="@dimen/sm_text_body"
+                android:textColor="@color/sm_gold" />
+
+            <TextView
+                android:id="@+id/btnConfirm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_button_selector"
+                android:paddingLeft="20dp"
+                android:paddingTop="8dp"
+                android:paddingRight="20dp"
+                android:paddingBottom="8dp"
+                android:focusable="true"
+                android:text="✅ 完成"
+                android:textSize="@dimen/sm_text_body"
+                android:textColor="@color/sm_text" />
+
+            <TextView
+                android:id="@+id/btnDlna"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_button_selector"
+                android:paddingLeft="20dp"
+                android:paddingTop="8dp"
+                android:paddingRight="20dp"
+                android:paddingBottom="8dp"
+                android:focusable="true"
+                android:text="🎬 DLNA 投屏接收 (DMR)"
+                android:textSize="@dimen/sm_text_body"
+                android:textColor="@color/sm_primary" />
+
+            <TextView
+                android:id="@+id/tvDlnaStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="DLNA 服务未启动"
+                android:textSize="@dimen/sm_text_small"
+                android:textColor="@color/sm_text_dim" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

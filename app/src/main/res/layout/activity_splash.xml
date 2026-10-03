@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/sm_bg">
+
+    <!-- 背景图: 用户可动态设置 URL, 未设置时隐藏露出默认渐变 -->
+    <ImageView
+        android:id="@+id/ivSplashBg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <!-- 背景渐变光晕(设置了背景图后被隐藏) -->
+    <View
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_splash_overlay" />
+
+    <!-- 照片背景专用半透明黑遮罩: 提升前景文字对比度, 仅设置背景图时显示 -->
+    <View
+        android:id="@+id/vScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone" />
+
+    <!-- 浪漫文字区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp">
+
+        <!-- 顶部小爱心 -->
+        <TextView
+            android:id="@+id/tvHeart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="❤"
+            android:textSize="48sp"
+            android:textColor="@color/sm_primary"
+            android:alpha="0" />
+
+        <!-- 致 小茗 -->
+        <TextView
+            android:id="@+id/tvSplashTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="致 · 小茗"
+            android:textSize="64sp"
+            android:textColor="@color/sm_text"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:alpha="0" />
+
+        <!-- 情话正文: 由代码按自定义/默认内容逐行填写 -->
+        <LinearLayout
+            android:id="@+id/poemBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvSplashPoem1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="36dp"
+                android:textSize="28sp"
+                android:textColor="@color/sm_text_dim"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvSplashPoem2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textSize="28sp"
+                android:textColor="@color/sm_text_dim"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvSplashPoem3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:textSize="26sp"
+                android:textColor="@color/sm_text_dim"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvSplashPoem4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textSize="26sp"
+                android:textColor="@color/sm_text_dim"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvSplashPoem5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textSize="26sp"
+                android:textColor="@color/sm_text_dim"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvSplashPoem6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textSize="26sp"
+                android:textColor="@color/sm_text_dim"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- 署名 -->
+        <TextView
+            android:id="@+id/tvSplashSub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:text="—— 小高 同学 · 量身定制"
+            android:textSize="22sp"
+            android:textColor="@color/sm_primary"
+            android:alpha="0" />
+    </LinearLayout>
+</FrameLayout>

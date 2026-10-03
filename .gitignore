@@ -1,0 +1,33 @@
+### 构建产物与本地环境 ###
+build/
+.gradle/
+local.properties
+*.iml
+.idea/
+.DS_Store
+.trae/
+
+### 调试临时产物(截图 / 日志 / ui dump / 抓包) ###
+/*.png
+/*.jpg
+/*.xml
+/*.txt
+/*.bin
+/*.m3u
+/*.json
+!/test_config.json
+
+### 签名文件: 仅本地保留, 请务必离线备份(丢失后无法再发升级包) ###
+*.keystore
+*.jks
+*.p12
+
+### 第三方参考源码 / 反编译产物, 不纳入版本管理 ###
+reference/
+tvboximage/
+wex_source.json
+
+### 发版产物: release/ 下只保留最新 APK, 供 App 在线升级下载 ###
+*.apk
+*.aab
+!/release/*.apk
