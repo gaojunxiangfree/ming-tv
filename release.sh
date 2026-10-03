@@ -150,7 +150,6 @@ info "查找 GitHub 令牌"
 TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 if [ -z "$TOKEN" ] && [ -f "$TOKEN_FILE" ]; then
     TOKEN="$(tr -d ' \t\r\n' < "$TOKEN_FILE")"
-    ok "令牌来源: .gh_token"
 fi
 [ -n "$TOKEN" ] || die "未找到令牌. 可执行: echo 'github_pat_xxx' > .gh_token  (详见 --help)"
 TOKEN_SRC="本地文件 .gh_token"
