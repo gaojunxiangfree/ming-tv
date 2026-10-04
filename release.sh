@@ -59,21 +59,24 @@ warn() { printf '%s\n' "${C_YEL}  !${C_OFF} $*" >&2; }
 die()  { printf '%s\n' "${C_RED}ERR${C_OFF} $*" >&2; exit 1; }
 
 # 从远端地址解析 owner/repo, 兼容:
-#   https://github.com/owner/repo.git
-#   ssh://git@ssh.github.com:443/owner/repo.git
-#   git@gitee.com:owner/repo.git
+#   https://github.com/owner/repo.git        -> owner/repo
+#   ssh://git@ssh.github.com:443/owner/repo.git -> owner/repo
+#   git@gitee.com:owner/repo.git             -> owner/repo
 slug_from_url() {
-    local u="$1"
+    local u="$1" path
     u="${u%.git}"
-    u="${u#*://}"
-    u="${u#*@}"
     case "$u" in
-        */*) u="${u#*/}" ;;
-        *:*) u="${u#*:}" ;;
+        *://*) u="${u#*://}" ;;   # 去掉协议
     esac
+    u="${u#*@}"                   # 去掉 user@
     case "$u" in
-        */*) printf '%s' "$u"; return 0 ;;
-        *)   return 1 ;;
+        *:*) path="${u#*:}" ;;    # scp 形式 host:owner/repo
+        *)   path="$u" ;;         # 形式 host/owner/repo
+    esac
+    case "$path" in
+        */*/*) printf '%s' "${path#*/}" ;;   # host/owner/repo -> owner/repo
+        */*)   printf '%s' "$path" ;;        # owner/repo
+        *)     return 1 ;;
     esac
 }
 
