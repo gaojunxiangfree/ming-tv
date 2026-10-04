@@ -461,12 +461,13 @@ public class DetailActivity extends AppCompatActivity {
             episodeContainer.removeView(episodeGrid);
             episodeGrid = null;
         }
-        // 播放列表布局: "grid" 网格 / "column" 垂直列表(根据设置页选择)
-        String layout = PrefUtils.get(PrefUtils.K_PLAYLIST_LAYOUT, "column");
-        if ("grid".equals(layout)) {
-            rv.setLayoutManager(new GridLayoutManager(this, ScreenUtil.episodeColumns(this)));
-        } else {
+        // 播放列表布局: 默认 "grid" 平铺网格(每集平铺展示, 遥控器好选);
+        // 仍保留设置页可切回 "column" 垂直列表
+        String layout = PrefUtils.get(PrefUtils.K_PLAYLIST_LAYOUT, "grid");
+        if ("column".equals(layout)) {
             rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        } else {
+            rv.setLayoutManager(new GridLayoutManager(this, ScreenUtil.episodeColumns(this)));
         }
         // 遥控器: 选集区按"上"回到播放按钮, 避免焦点在 ScrollView 内丢失
         rv.setFocusable(true);

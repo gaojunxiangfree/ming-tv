@@ -14,7 +14,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -32,6 +32,7 @@ import com.seanming.player.spider.SpiderManager;
 import com.seanming.player.ui.adapter.EpisodeAdapter;
 import com.seanming.player.util.OkHttpUtil;
 import com.seanming.player.util.PrefUtils;
+import com.seanming.player.util.ScreenUtil;
 import com.seanming.player.util.ThreadUtils;
 
 import java.net.URLEncoder;
@@ -64,6 +65,8 @@ public class PlayActivity extends AppCompatActivity {
     private List<Vod.Episode> episodes;
     private EpisodeAdapter episodeAdapter;
     private LinearLayout episodePanel;
+    /** 选集平铺网格(三行高, 列数按屏宽自适应) */
+    private RecyclerView rvEpisodes;
     private View btnBack;
     private View controlBar;
     private TextView tvTitle;
@@ -127,6 +130,8 @@ public class PlayActivity extends AppCompatActivity {
     private static final long AUTO_HIDE_DELAY = 5000L;
     private final Handler hideHandler = new Handler(Looper.getMainLooper());
     private final Runnable hideRunnable = this::hideControls;
+    /** 快进/快退浮层自动消失 */
+    private final Runnable hideGestureRunnable = this::hideGesture;
 
     /** 倍速档位, 0.5x ~ 2.0x */
     private static final float[] SPEEDS = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f};
@@ -242,7 +247,7 @@ public class PlayActivity extends AppCompatActivity {
         seekBar = findViewById(R.id.seekBar);
         btnBack = findViewById(R.id.btnBack);
         controlBar = findViewById(R.id.controlBar);
-        RecyclerView rv = findViewById(R.id.rvEpisodes);
+        rvEpisodes = findViewById(R.id.rvEpisodes);
 
         // 手势控制初始化
         audioManager = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
@@ -253,9 +258,8 @@ public class PlayActivity extends AppCompatActivity {
         playerContainer.setOnClickListener(v -> toggleControls());
         playerContainer.setOnTouchListener((v, e) -> handleGesture(e));
         findViewById(R.id.btnEpisodes).setOnClickListener(v -> toggleEpisodePanel());
-        // 快退/快进 ±10s
-        findViewById(R.id.btnSeekBack).setOnClickListener(v -> seekBy(-10000));
-        findViewById(R.id.btnSeekForward).setOnClickListener(v -> seekBy(10000));
+        // 快进: 打开跳转面板, 拖动选择目标时间并实时显示「目标 / 总时长」
+        findViewById(R.id.btnSeek).setOnClickListener(v -> showSeekDialog());
         // 上一集/下一集
         findViewById(R.id.btnPrev).setOnClickListener(v -> playPrev());
         findViewById(R.id.btnNext).setOnClickListener(v -> playNext());
@@ -323,6 +327,8 @@ public class PlayActivity extends AppCompatActivity {
                     if (dur > 0) {
                         long target = dur * progress / 1000;
                         tvPosition.setText(formatMs(target) + " / " + formatMs(dur));
+                        // 拖动时中央大字浮层显示「目标 / 总时长」, 一眼看清快进到哪里
+                        showGesture("⏩ " + formatMs(target) + "  /  " + formatMs(dur));
                     }
                 }
             }
@@ -331,11 +337,13 @@ public class PlayActivity extends AppCompatActivity {
             public void onStartTrackingTouch(android.widget.SeekBar sb) {
                 seeking = true;
                 hideHandler.removeCallbacks(hideRunnable);
+                hideHandler.removeCallbacks(hideGestureRunnable);
             }
 
             @Override
             public void onStopTrackingTouch(android.widget.SeekBar sb) {
                 seeking = false;
+                hideGesture();
                 if (kernel != null) {
                     long dur = kernel.getDuration();
                     if (dur > 0) {
@@ -349,8 +357,7 @@ public class PlayActivity extends AppCompatActivity {
 
         // 焦点缩放动画
         setupFocusAnim(btnBack);
-        setupFocusAnim(findViewById(R.id.btnSeekBack));
-        setupFocusAnim(findViewById(R.id.btnSeekForward));
+        setupFocusAnim(findViewById(R.id.btnSeek));
         setupFocusAnim(findViewById(R.id.btnPrev));
         setupFocusAnim(findViewById(R.id.btnNext));
         setupFocusAnim(btnPlayPause);
@@ -371,13 +378,16 @@ public class PlayActivity extends AppCompatActivity {
         setupFocusAnim(btnAudio);
         setupFocusAnim(findViewById(R.id.btnEpisodes));
 
-        rv.setLayoutManager(new LinearLayoutManager(this));
+        // 选集平铺网格: 列数按屏宽自适应(投影仪/电视更宽则更多列), 约三行铺满便于遥控器选择
+        rvEpisodes.setLayoutManager(new GridLayoutManager(this, ScreenUtil.episodeColumns(this)));
         episodeAdapter = new EpisodeAdapter();
-        rv.setAdapter(episodeAdapter);
+        rvEpisodes.setAdapter(episodeAdapter);
         episodeAdapter.submit(episodes, index);
         episodeAdapter.setOnClick((i, ep) -> {
             index = i;
             episodeAdapter.setSelected(i);
+            // 选完自动收起面板, 回到播放画面
+            hideEpisodePanel();
             playCurrent();
         });
 
@@ -679,8 +689,43 @@ public class PlayActivity extends AppCompatActivity {
         return String.format("%.1f MB/s", bytesPerSec / 1024.0 / 1024.0);
     }
 
+    /** 「选集」按钮: 展开/收起选集平铺网格 */
     private void toggleEpisodePanel() {
-        episodePanel.setVisibility(episodePanel.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+        if (episodePanel == null) return;
+        if (episodePanel.getVisibility() == View.VISIBLE) {
+            hideEpisodePanel();
+        } else {
+            showEpisodePanel();
+        }
+    }
+
+    /** 展开选集平铺网格: 收起底部控制条/进度, 焦点落到当前集 */
+    private void showEpisodePanel() {
+        if (episodePanel == null) return;
+        episodePanel.setVisibility(View.VISIBLE);
+        // 面板覆盖底部区域, 暂时收起控制条与进度, 避免重叠
+        if (controlBar != null) controlBar.setVisibility(View.GONE);
+        if (seekBar != null) seekBar.setVisibility(View.GONE);
+        if (tvPosition != null) tvPosition.setVisibility(View.GONE);
+        if (tvQuality != null) tvQuality.setVisibility(View.GONE);
+        if (tvTopInfo != null) tvTopInfo.setVisibility(View.GONE);
+        hideHandler.removeCallbacks(hideRunnable);
+        // 滚动并聚焦当前集, 方便遥控器继续选择
+        if (rvEpisodes != null) {
+            rvEpisodes.post(() -> {
+                rvEpisodes.scrollToPosition(Math.max(index, 0));
+                RecyclerView.ViewHolder vh = rvEpisodes.findViewHolderForAdapterPosition(index);
+                if (vh != null) vh.itemView.requestFocus();
+            });
+        }
+    }
+
+    /** 收起选集网格并恢复底部控制条 */
+    private void hideEpisodePanel() {
+        if (episodePanel == null) return;
+        episodePanel.setVisibility(View.GONE);
+        setControlsVisibility(View.VISIBLE);
+        controlsVisible = true;
         resetAutoHide();
     }
 
@@ -730,7 +775,7 @@ public class PlayActivity extends AppCompatActivity {
         }
     }
 
-    /** 快退/快进, 限制在 [0, duration] */
+    /** 快退/快进(遥控器媒体键/方向键): 中央浮层显示「目标 / 总时长」 */
     private void seekBy(long deltaMs) {
         if (kernel == null) return;
         long dur = kernel.getDuration();
@@ -738,9 +783,76 @@ public class PlayActivity extends AppCompatActivity {
         if (target < 0) target = 0;
         if (dur > 0 && target > dur) target = dur;
         kernel.seekTo(target);
-        Toast.makeText(this, (deltaMs > 0 ? "快进" : "快退") + " "
-                + (Math.abs(deltaMs) / 1000) + "s", Toast.LENGTH_SHORT).show();
+        // 无需固定 ±10s 按钮: 直接显示跳到的时间与总时长
+        showGesture((deltaMs > 0 ? "⏩ 快进  " : "⏪ 快退  ") + formatMs(target)
+                + (dur > 0 ? "  /  " + formatMs(dur) : ""));
+        hideHandler.removeCallbacks(hideGestureRunnable);
+        hideHandler.postDelayed(hideGestureRunnable, 1200);
         resetAutoHide();
+    }
+
+    /**
+     * 快进/跳转面板: 拖动选择目标时间, 大字实时显示「目标时间 / 总时长」,
+     * 这样一眼就知道快进到了哪里, 不再需要 ±10s 固定步进按钮.
+     */
+    private void showSeekDialog() {
+        if (kernel == null) return;
+        final long dur = kernel.getDuration();
+        if (dur <= 0) {
+            Toast.makeText(this, "时长未知, 请稍后再试", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final long cur = kernel.getPosition();
+
+        final TextView tvTime = new TextView(this);
+        tvTime.setGravity(android.view.Gravity.CENTER);
+        tvTime.setTextSize(30f);
+        tvTime.setTextColor(getResources().getColor(R.color.sm_text));
+        tvTime.setText(formatMs(cur) + "  /  " + formatMs(dur));
+
+        final TextView tvHint = new TextView(this);
+        tvHint.setGravity(android.view.Gravity.CENTER);
+        tvHint.setTextSize(14f);
+        tvHint.setTextColor(getResources().getColor(R.color.sm_text_dim));
+        tvHint.setText("当前 " + formatMs(cur) + "  ·  拖动选择目标时间");
+
+        final android.widget.SeekBar bar = new android.widget.SeekBar(this);
+        bar.setMax(1000);
+        bar.setProgress((int) (cur * 1000 / dur));
+        bar.setPadding(30, 40, 30, 40);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(48, 32, 48, 16);
+        box.addView(tvTime);
+        box.addView(tvHint);
+        box.addView(bar);
+
+        bar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(android.widget.SeekBar sb, int progress, boolean fromUser) {
+                long target = dur * progress / 1000;
+                tvTime.setText(formatMs(target) + "  /  " + formatMs(dur));
+                tvHint.setText("当前 " + formatMs(kernel != null ? kernel.getPosition() : cur)
+                        + "  ·  跳转到 " + formatMs(target));
+            }
+            @Override public void onStartTrackingTouch(android.widget.SeekBar sb) { }
+            @Override public void onStopTrackingTouch(android.widget.SeekBar sb) { }
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle("快进 / 跳转时间")
+                .setView(box)
+                .setPositiveButton("跳转", (d, w) -> {
+                    long target = dur * bar.getProgress() / 1000;
+                    if (kernel != null) kernel.seekTo(target);
+                    showGesture("⏩ 已跳转  " + formatMs(target) + "  /  " + formatMs(dur));
+                    hideHandler.removeCallbacks(hideGestureRunnable);
+                    hideHandler.postDelayed(hideGestureRunnable, 1500);
+                    resetAutoHide();
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     /** 手势控制: 横向拖动=进度, 左侧纵向=亮度, 右侧纵向=音量 */
@@ -892,7 +1004,7 @@ public class PlayActivity extends AppCompatActivity {
                 case android.view.KeyEvent.KEYCODE_BACK:
                     // 优先收起选集面板/控制层, 全部收起后才退出
                     if (episodePanel != null && episodePanel.getVisibility() == View.VISIBLE) {
-                        episodePanel.setVisibility(View.GONE);
+                        hideEpisodePanel();
                         return true;
                     }
                     if (controlsVisible) {
@@ -1384,6 +1496,7 @@ public class PlayActivity extends AppCompatActivity {
         if (kernel != null) kernel.pause();
         posHandler.removeCallbacks(posTicker);
         hideHandler.removeCallbacks(hideRunnable);
+        hideHandler.removeCallbacks(hideGestureRunnable);
     }
 
     @Override
@@ -1407,6 +1520,7 @@ public class PlayActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         hideHandler.removeCallbacks(hideRunnable);
+        hideHandler.removeCallbacks(hideGestureRunnable);
         if (kernel != null) kernel.release();
     }
 
