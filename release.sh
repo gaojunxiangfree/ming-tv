@@ -10,6 +10,7 @@
 #         ./release.sh 1.0.1 --skip-build    # 复用已编译好的 APK, 不重新编译
 #         ./release.sh 1.0.1 --no-clean      # 编译时不执行 clean(加快速度, 但可能打进旧代码)
 #         ./release.sh 1.0.1 --dry-run       # 只做全部前置检查(工作区/版本号/tag/令牌权限), 不改任何东西
+#         ./release.sh 1.0.1 --gitee         # 另外推送到码云并创建码云发行版(需 .gitee_token)
 #
 # 版本号规则: 主版本.次版本.修订号, versionCode = 主*10000 + 次*100 + 修订
 #
@@ -25,6 +26,12 @@
 #   生成地址: https://github.com/settings/personal-access-tokens
 #   需先改权限: Repository permissions -> Contents -> Read and write
 #
+# 码云令牌(仅 --gitee 需要)按以下顺序查找:
+#   1) 环境变量 GITEE_TOKEN
+#   2) 仓库根目录的 .gitee_token 文件(已加入 .gitignore), 例: echo 'xxx' > .gitee_token
+#   生成地址: https://gitee.com/profile/personal_access_tokens
+#   需勾选权限: projects
+#
 # 依赖: bash / git / curl / python3 / JDK17
 #
 set -euo pipefail
@@ -37,6 +44,8 @@ APK_DIR="app/build/outputs/apk/release"
 API="https://api.github.com"
 UPLOAD_API="https://uploads.github.com"
 TOKEN_FILE="$ROOT/.gh_token"
+GITEE_TOKEN_FILE="$ROOT/.gitee_token"
+GITEE_API="https://gitee.com/api/v5"
 
 if [ -t 1 ]; then
     C_RED=$'\033[31m'; C_GRN=$'\033[32m'; C_YEL=$'\033[33m'; C_CYA=$'\033[36m'; C_OFF=$'\033[0m'
@@ -49,6 +58,25 @@ ok()   { printf '%s\n' "${C_GRN} OK${C_OFF} $*"; }
 warn() { printf '%s\n' "${C_YEL}  !${C_OFF} $*" >&2; }
 die()  { printf '%s\n' "${C_RED}ERR${C_OFF} $*" >&2; exit 1; }
 
+# 从远端地址解析 owner/repo, 兼容:
+#   https://github.com/owner/repo.git
+#   ssh://git@ssh.github.com:443/owner/repo.git
+#   git@gitee.com:owner/repo.git
+slug_from_url() {
+    local u="$1"
+    u="${u%.git}"
+    u="${u#*://}"
+    u="${u#*@}"
+    case "$u" in
+        */*) u="${u#*/}" ;;
+        *:*) u="${u#*:}" ;;
+    esac
+    case "$u" in
+        */*) printf '%s' "$u"; return 0 ;;
+        *)   return 1 ;;
+    esac
+}
+
 usage() {
     awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "${BASH_SOURCE[0]}"
 }
@@ -60,6 +88,7 @@ NO_BUMP=0
 NO_CLEAN=0
 SKIP_BUILD=0
 DRY_RUN=0
+GITEE=0
 NOTES_FILE=""
 
 while [ $# -gt 0 ]; do
@@ -69,6 +98,7 @@ while [ $# -gt 0 ]; do
         --no-clean)   NO_CLEAN=1 ;;
         --skip-build) SKIP_BUILD=1 ;;
         --dry-run)    DRY_RUN=1 ;;
+        --gitee)      GITEE=1 ;;
         --notes)      NOTES_FILE="${2:-}"; shift ;;
         -h|--help)    usage; exit 0 ;;
         -*)           usage; die "未知参数: $1" ;;
@@ -146,19 +176,17 @@ fi
 
 info "解析仓库地址"
 REMOTE_URL="$(git remote get-url origin)"
-SLUG="$REMOTE_URL"
-SLUG="${SLUG%.git}"
-SLUG="${SLUG#*://}"
-SLUG="${SLUG#*@}"
-case "$SLUG" in
-    */*) SLUG="${SLUG#*/}" ;;
-    *:*) SLUG="${SLUG#*:}" ;;
-esac
-case "$SLUG" in
-    */*) ;;
-    *) die "无法从 origin 解析 owner/repo: $REMOTE_URL" ;;
-esac
+SLUG="$(slug_from_url "$REMOTE_URL")" || die "无法从 origin 解析 owner/repo: $REMOTE_URL"
 ok "仓库: $SLUG (分支 $BRANCH, 远端 $REMOTE_URL)"
+
+GITEE_REMOTE="${GITEE_REMOTE:-gitee}"
+GITEE_SLUG=""
+if [ "$GITEE" = "1" ]; then
+    GITEE_URL="$(git remote get-url "$GITEE_REMOTE" 2>/dev/null || true)"
+    [ -n "$GITEE_URL" ] || die "找不到远端 $GITEE_REMOTE, 请先: git remote add $GITEE_REMOTE <码云仓库地址>"
+    GITEE_SLUG="$(slug_from_url "$GITEE_URL")" || die "无法从 $GITEE_REMOTE 解析 owner/repo: $GITEE_URL"
+    ok "码云仓库: $GITEE_SLUG (远端 $GITEE_REMOTE)"
+fi
 
 info "查找 GitHub 令牌"
 TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
@@ -186,6 +214,19 @@ print('仓库:', d['full_name'], '| 私有:', d['private'])
 PY
 ok "令牌可用"
 
+# ---------------------------------------------------------------- 码云令牌(--gitee)
+GITEE_TOKEN=""
+if [ "$GITEE" = "1" ]; then
+    info "查找码云令牌"
+    GITEE_TOKEN_SRC="环境变量 GITEE_TOKEN"
+    if [ -z "${GITEE_TOKEN:-}" ] && [ -f "$GITEE_TOKEN_FILE" ]; then
+        GITEE_TOKEN="$(tr -d ' \t\r\n' < "$GITEE_TOKEN_FILE")"
+        GITEE_TOKEN_SRC="本地文件 .gitee_token"
+    fi
+    [ -n "${GITEE_TOKEN:-}" ] || die "未找到码云令牌. 可执行: echo '你的码云令牌' > .gitee_token (详见 --help)"
+    ok "码云令牌来源: $GITEE_TOKEN_SRC"
+fi
+
 if [ "$DRY_RUN" = "1" ]; then
     GRADLE_TASKS_DESC="clean :app:assembleRelease"
     [ "$NO_CLEAN" = "1" ] && GRADLE_TASKS_DESC=":app:assembleRelease"
@@ -195,6 +236,9 @@ if [ "$DRY_RUN" = "1" ]; then
     printf '  将推送    : %s (分支 %s)\n' "$SLUG" "$BRANCH"
     printf '  将建      : %s%s\n' "$TAG" "$([ "$DRAFT" = "1" ] && printf ' (草稿)')"
     printf '  将上传    : %s\n' "$APK_PATH"
+    if [ "$GITEE" = "1" ]; then
+        printf '  码云同步  : 推送 %s/%s 与 tag 并创建码云发行版 (%s)\n' "$GITEE_REMOTE" "$BRANCH" "$GITEE_SLUG"
+    fi
     exit 0
 fi
 
@@ -346,12 +390,72 @@ ok "上传完成 $(awk -v s="$UP_SIZE" 'BEGIN{printf "%.2f MB", s/1048576}')"
 
 git fetch --tags --quiet origin 2>/dev/null || true
 
+# ---------------------------------------------------------------- 码云发行版(--gitee)
+GITEE_REL_URL=""
+GITEE_DL_URL=""
+if [ "$GITEE" = "1" ]; then
+    info "推送 $BRANCH 与 tag $TAG 到码云 ($GITEE_REMOTE)"
+    git push -q "$GITEE_REMOTE" "$BRANCH" || die "推送码云 $BRANCH 失败"
+    git push -q "$GITEE_REMOTE" "$TAG" || warn "推送 tag 到码云失败, 发行版可能无法关联该 tag"
+    ok "已推送 $BRANCH 与 $TAG"
+
+    info "创建码云发行版 $TAG"
+    python3 - "$TAG" "$APK_NAME" "$APK_SHA" <<'PY' > /tmp/gitee_body.txt
+import sys
+tag, apk_name, sha = sys.argv[1:4]
+changes = open('/tmp/rel_body.txt', encoding='utf-8').read().strip() or '- 维护性更新'
+print(f"""## 茗影院 {tag}
+
+### 本次变更
+{changes}
+
+### 安装说明
+- 支持 Android 5.0 (API 21) 及以上, 平板 / 手机 / 投影仪 / TV 均可
+- 首次启动可在「换源」中切换视频源, 或在设置里扫码推送接口配置
+
+### 文件校验
+- `{apk_name}`  sha256: `{sha}`
+
+### 已知说明
+- 部分第三方源存在源侧故障(如解密库缺失、接口返回异常), 与播放器本身无关
+- 建议在真机电视 / 投影仪上验证网盘、DLNA 等横屏功能
+""")
+PY
+    GITEE_REL_JSON="$(curl -sS --max-time 40 -X POST "$GITEE_API/repos/$GITEE_SLUG/releases" \
+        --data-urlencode "access_token=$GITEE_TOKEN" \
+        --data-urlencode "tag_name=$TAG" \
+        --data-urlencode "target_commitish=$HEAD_SHA" \
+        --data-urlencode "name=茗影院 $TAG" \
+        --data-urlencode "body@/tmp/gitee_body.txt" \
+        --data-urlencode "prerelease=false")"
+    GITEE_REL_ID="$(printf '%s' "$GITEE_REL_JSON" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("id",""))' 2>/dev/null || true)"
+    [ -n "$GITEE_REL_ID" ] || { printf '%s\n' "$GITEE_REL_JSON" | head -c 300; die "创建码云发行版失败"; }
+    ok "码云发行版已创建 (id $GITEE_REL_ID)"
+
+    info "上传 $(basename "$APK_PATH") 到码云"
+    GITEE_UP_JSON="$(curl -sS --max-time 900 -X POST \
+        "$GITEE_API/repos/$GITEE_SLUG/releases/$GITEE_REL_ID/attach_files" \
+        -F "access_token=$GITEE_TOKEN" -F "file=@$APK_PATH")"
+    GITEE_DL_URL="$(printf '%s' "$GITEE_UP_JSON" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(d.get("browser_download_url") or d.get("download_url") or "")' 2>/dev/null || true)"
+    GITEE_REL_URL="https://gitee.com/$GITEE_SLUG/releases/tag/$TAG"
+    if [ -n "$GITEE_DL_URL" ]; then
+        ok "码云上传完成"
+    else
+        warn "码云附件响应异常(文件通常已上传): $(printf '%s' "$GITEE_UP_JSON" | head -c 200)"
+        GITEE_DL_URL="https://gitee.com/$GITEE_SLUG/releases/download/$TAG/$APK_NAME"
+    fi
+fi
+
 printf '\n%s\n' "========================================"
 printf '%s\n' "  ${C_GRN}发版完成${C_OFF}"
 printf '  版本     : %s\n' "$VERSION"
 printf '  提交     : %s\n' "$HEAD_SHA"
 printf '  Release  : %s\n' "$REL_URL"
 printf '  下载直链 : %s\n' "$DL_URL"
+if [ "$GITEE" = "1" ]; then
+    printf '  码云发行 : %s\n' "$GITEE_REL_URL"
+    printf '  码云直链 : %s\n' "$GITEE_DL_URL"
+fi
 printf '  sha256   : %s\n' "$APK_SHA"
 [ "$DRAFT" = "1" ] && printf '  %s\n' "注意: 当前为草稿 Release, 需在网页点 Publish release 才对外可见"
 printf '%s\n' "========================================"

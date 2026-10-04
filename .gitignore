@@ -28,6 +28,8 @@ app/src/main/res/drawable-nodpi/
 
 ### 发版脚本用的 GitHub 令牌: 绝不入库(写权限, 泄露即可改仓库) ###
 .gh_token
+### 发版脚本用的码云令牌: 同上, 绝不入库 ###
+.gitee_token
 
 ### 第三方参考源码 / 反编译产物, 不纳入版本管理 ###
 reference/
