@@ -6,6 +6,8 @@
 一个面向 **Android 横屏大屏（平板 / 投影仪 / TV）** 的影视播放器，兼容 TVBox 生态的接口源与爬虫生态，
 内置双播放内核、直播、网盘、投屏、推送配置等模块，全部用 Java + 原生 Android 实现。
 
+> 🌏 **国内访问更快**：本仓库在 Gitee 有同步镜像 —— [gitee.com/lovecodefree/ming-tv](https://gitee.com/lovecodefree/ming-tv)
+
 ***
 
 ## 目录
