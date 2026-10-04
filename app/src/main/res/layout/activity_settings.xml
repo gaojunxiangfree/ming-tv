@@ -340,7 +340,7 @@
                 android:layout_marginTop="16dp"
                 android:textSize="@dimen/sm_text_small"
                 android:textColor="@color/sm_text_dim"
-                android:text="播放列表布局 (选集侧栏展示方式)" />
+                android:text="播放列表布局 (选集平铺网格 / 垂直列表)" />
 
             <LinearLayout
                 android:id="@+id/playlistContainer"
