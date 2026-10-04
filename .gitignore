@@ -16,7 +16,10 @@ local.properties
 /*.m3u
 /*.json
 !/test_config.json
-!/version.json
+
+### 个人素材(开屏照片等): 仅本地保留, 绝不要提交 ###
+### 开源仓库里请勿放置任何个人照片/隐私图片 ###
+app/src/main/res/drawable-nodpi/
 
 ### 签名文件: 仅本地保留, 请务必离线备份(丢失后无法再发升级包) ###
 *.keystore
@@ -31,7 +34,6 @@ reference/
 tvboximage/
 wex_source.json
 
-### 发版产物: release/ 下只保留最新 APK, 供 App 在线升级下载 ###
+### 打包产物一律不入库(APK 请走 GitHub Release 发布) ###
 *.apk
 *.aab
-!/release/*.apk
