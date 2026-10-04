@@ -650,11 +650,11 @@ public class SettingsActivity extends AppCompatActivity {
         row3.addView(btnClearBg);
     }
 
-    /** 播放列表布局: 垂直列表 / 网格 */
+    /** 播放列表布局: 网格(平铺) / 垂直列表 */
     private void renderPlaylistLayout() {
         playlistContainer.removeAllViews();
-        String current = PrefUtils.get(PrefUtils.K_PLAYLIST_LAYOUT, "column");
-        final String[][] opts = {{"column", "垂直列表"}, {"grid", "网格"}};
+        String current = PrefUtils.get(PrefUtils.K_PLAYLIST_LAYOUT, "grid");
+        final String[][] opts = {{"grid", "网格(平铺)"}, {"column", "垂直列表"}};
         for (String[] p : opts) {
             TextView tv = (TextView) LayoutInflater.from(this)
                     .inflate(R.layout.item_tab, playlistContainer, false);
