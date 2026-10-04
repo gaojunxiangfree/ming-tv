@@ -7,10 +7,11 @@ def keystoreFile = rootProject.file('seanming.keystore')
 // ===== 版本号: 发版时只改这里 =====
 // 命名规则: 主版本.次版本.修订号 (versionCode = 主*10000 + 次*100 + 修订)
 // 版本历史:
+//  1.0.2  2026-10-04
 //  1.0.1  2026-10-04
 //  1.0.0  2026-10-03  首个正式版: 页面齐备, 直播可播放, 支持在线升级
-def appVersionCode = 10001
-def appVersionName = '1.0.1'
+def appVersionCode = 10002
+def appVersionName = '1.0.2'
 def apkBaseName = 'ming-tv'
 
 android {
