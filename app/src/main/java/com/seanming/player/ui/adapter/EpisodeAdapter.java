@@ -15,12 +15,20 @@ import com.seanming.player.util.TextScaleUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 选集适配器 */
+/**
+ * 选集适配器.
+ * 支持"页码范围收纳": 只展示 [rangeStart, rangeEnd) 内的剧集,
+ * 但对外回调与 setSelected 一律使用"全局下标"(相对完整剧集列表), 调用方无需关心分页.
+ */
 public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.VH> {
 
+    /** 回调使用全局下标 */
     public interface OnClick { void onClick(int index, Vod.Episode ep); }
 
     private final List<Vod.Episode> items = new ArrayList<>();
+    /** 当前可见范围 [rangeStart, rangeEnd), 默认全部可见 */
+    private int rangeStart = 0;
+    private int rangeEnd = 0;
     private int selected = -1;
     private OnClick listener;
 
@@ -29,15 +37,33 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.VH> {
     public void submit(List<Vod.Episode> list, int sel) {
         items.clear();
         if (list != null) items.addAll(list);
+        rangeStart = 0;
+        rangeEnd = items.size();
         selected = sel;
         notifyDataSetChanged();
     }
 
+    /** 只展示 [start, end) 区间的剧集(收纳分页), 下标仍为全局下标 */
+    public void setRange(int start, int end) {
+        if (start < 0) start = 0;
+        if (end > items.size()) end = items.size();
+        if (end < start) end = start;
+        rangeStart = start;
+        rangeEnd = end;
+        notifyDataSetChanged();
+    }
+
+    /** 选中某一集, 参数为全局下标(不在当前可见范围内则无视觉变化) */
     public void setSelected(int sel) {
         int old = selected;
         selected = sel;
-        if (old >= 0) notifyItemChanged(old);
-        if (sel >= 0) notifyItemChanged(sel);
+        notifyPosition(old);
+        notifyPosition(sel);
+    }
+
+    private void notifyPosition(int global) {
+        int position = global - rangeStart;
+        if (position >= 0 && position < getItemCount()) notifyItemChanged(position);
     }
 
     @NonNull
@@ -49,13 +75,15 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
-        Vod.Episode ep = items.get(position);
+        final int global = rangeStart + position;
+        if (global < 0 || global >= items.size()) return;
+        Vod.Episode ep = items.get(global);
         h.tv.setText(ep.name);
-        h.tv.setSelected(position == selected);
+        h.tv.setSelected(global == selected);
         // 动态文字大小: 选集文字随全局缩放
         TextScaleUtil.apply(h.tv, 26);
         h.itemView.setOnClickListener(v -> {
-            if (listener != null) listener.onClick(position, ep);
+            if (listener != null) listener.onClick(global, ep);
         });
         // 焦点变化时缩放动画
         h.itemView.setOnFocusChangeListener((view, hasFocus) -> {
@@ -68,7 +96,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.VH> {
     }
 
     @Override
-    public int getItemCount() { return items.size(); }
+    public int getItemCount() { return Math.max(0, rangeEnd - rangeStart); }
 
     static class VH extends RecyclerView.ViewHolder {
         TextView tv;
