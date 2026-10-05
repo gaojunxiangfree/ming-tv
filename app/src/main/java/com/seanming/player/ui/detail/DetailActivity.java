@@ -55,6 +55,10 @@ public class DetailActivity extends AppCompatActivity {
     private List<Vod.Episode> currentEpisodes = new ArrayList<>();
     /** 当前选集网格视图(切换线路/倒序时先移除旧网格, 避免叠加) */
     private RecyclerView episodeGrid;
+    /** 选集页码范围收纳: 每 30 集为一组(1-30 / 31-60 ...) */
+    private static final int EPISODE_RANGE_SIZE = 30;
+    /** 页码范围行(切换线路/倒序时重建, 需先从容器移除) */
+    private HorizontalScrollView episodeRangeScroll;
     /** 选集倒序显示(影视仓"倒序"按钮) */
     private boolean episodesReversed = false;
     /** 简介是否展开(影视仓"内容简介"折叠开关) */
@@ -456,7 +460,11 @@ public class DetailActivity extends AppCompatActivity {
 
     private void buildEpisodeGrid(List<Vod.Episode> episodes) {
         RecyclerView rv = new RecyclerView(this);
-        // 切换线路/倒序时先移除旧的选集网格, 避免在容器中叠加
+        // 切换线路/倒序时先移除旧的页码行与选集网格, 避免在容器中叠加
+        if (episodeRangeScroll != null) {
+            episodeContainer.removeView(episodeRangeScroll);
+            episodeRangeScroll = null;
+        }
         if (episodeGrid != null) {
             episodeContainer.removeView(episodeGrid);
             episodeGrid = null;
@@ -477,7 +485,63 @@ public class DetailActivity extends AppCompatActivity {
         adapter.submit(episodes, -1);
         adapter.setOnClick((index, ep) -> play(index));
         episodeGrid = rv;
+        // 收纳: 超过 30 集时先按 1-30 / 31-60 ... 分页, 点页码再展开该页
+        int total = episodes == null ? 0 : episodes.size();
+        if (total > EPISODE_RANGE_SIZE) {
+            adapter.setRange(0, EPISODE_RANGE_SIZE);
+            episodeContainer.addView(buildRangeRow(adapter, total));
+        }
         episodeContainer.addView(rv);
+    }
+
+    /** 构建剧集页码范围行(1-30 / 31-60 ...), 点击后只平铺该页剧集 */
+    private View buildRangeRow(final EpisodeAdapter adapter, int total) {
+        HorizontalScrollView hsv = new HorizontalScrollView(this);
+        hsv.setHorizontalScrollBarEnabled(false);
+        hsv.setFocusable(false);
+        hsv.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        episodeRangeScroll = hsv;
+
+        final LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        int groups = (total + EPISODE_RANGE_SIZE - 1) / EPISODE_RANGE_SIZE;
+        for (int g = 0; g < groups; g++) {
+            final int group = g;
+            int from = g * EPISODE_RANGE_SIZE + 1;
+            int to = Math.min((g + 1) * EPISODE_RANGE_SIZE, total);
+            TextView tv = new TextView(this);
+            tv.setText(from + "-" + to);
+            TextScaleUtil.apply(tv, 24);
+            tv.setTextColor(getResources().getColor(R.color.sm_text));
+            tv.setBackgroundResource(R.drawable.bg_episode_selector);
+            tv.setPadding(30, 12, 30, 12);
+            tv.setFocusable(true);
+            tv.setClickable(true);
+            tv.setSelected(g == 0);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.setMargins(0, 0, 16, 0);
+            tv.setLayoutParams(lp);
+            tv.setOnFocusChangeListener((view, hasFocus) -> {
+                if (hasFocus) {
+                    view.animate().scaleX(1.1f).scaleY(1.1f).setDuration(120).start();
+                } else {
+                    view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
+                }
+            });
+            tv.setOnClickListener(v -> {
+                adapter.setRange(group * EPISODE_RANGE_SIZE,
+                        Math.min((group + 1) * EPISODE_RANGE_SIZE, total));
+                for (int i = 0; i < row.getChildCount(); i++) {
+                    View child = row.getChildAt(i);
+                    if (child instanceof TextView) ((TextView) child).setSelected(i == group);
+                }
+                if (episodeGrid != null) episodeGrid.scrollToPosition(0);
+            });
+            row.addView(tv);
+        }
+        hsv.addView(row);
+        return hsv;
     }
 
     private void play(int index) {

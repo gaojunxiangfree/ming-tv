@@ -33,6 +33,7 @@ import com.seanming.player.ui.adapter.EpisodeAdapter;
 import com.seanming.player.util.OkHttpUtil;
 import com.seanming.player.util.PrefUtils;
 import com.seanming.player.util.ScreenUtil;
+import com.seanming.player.util.TextScaleUtil;
 import com.seanming.player.util.ThreadUtils;
 
 import java.net.URLEncoder;
@@ -67,6 +68,12 @@ public class PlayActivity extends AppCompatActivity {
     private LinearLayout episodePanel;
     /** 选集平铺网格(三行高, 列数按屏宽自适应) */
     private RecyclerView rvEpisodes;
+    /** 选集页码范围收纳: 每 30 集为一组(1-30 / 31-60 ...) */
+    private static final int EPISODE_RANGE_SIZE = 30;
+    private View episodeRangeScroll;
+    private LinearLayout episodeRangeRow;
+    /** 当前展示页的首集全局下标 */
+    private int episodeRangeStart = 0;
     private View btnBack;
     private View controlBar;
     private TextView tvTitle;
@@ -126,7 +133,7 @@ public class PlayActivity extends AppCompatActivity {
     /** 0=未定 1=进度 2=亮度 3=音量 */
     private int gestureMode = 0;
 
-    /** 播放时无操作 5 秒后自动隐藏控制层 */
+    /** 控制层停留 5 秒无操作后自动隐藏(播放 / 暂停均生效) */
     private static final long AUTO_HIDE_DELAY = 5000L;
     private final Handler hideHandler = new Handler(Looper.getMainLooper());
     private final Runnable hideRunnable = this::hideControls;
@@ -248,6 +255,8 @@ public class PlayActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         controlBar = findViewById(R.id.controlBar);
         rvEpisodes = findViewById(R.id.rvEpisodes);
+        episodeRangeScroll = findViewById(R.id.episodeRangeScroll);
+        episodeRangeRow = findViewById(R.id.episodeRangeRow);
 
         // 手势控制初始化
         audioManager = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
@@ -390,6 +399,8 @@ public class PlayActivity extends AppCompatActivity {
             hideEpisodePanel();
             playCurrent();
         });
+        // 选集收纳: 超过 30 集时按 1-30 / 31-60 ... 分组
+        buildEpisodeRangeRow();
 
         initPlayer();
         updatePlayPauseLabel();
@@ -487,13 +498,8 @@ public class PlayActivity extends AppCompatActivity {
             @Override
             public void onIsPlayingChanged(boolean isPlaying) {
                 updatePlayPauseLabel();
-                if (isPlaying) {
-                    // 播放中: 若控制层可见, 启动自动隐藏
-                    resetAutoHide();
-                } else {
-                    // 暂停: 取消自动隐藏, 保持控制层可见方便操作
-                    hideHandler.removeCallbacks(hideRunnable);
-                }
+                // 播放/暂停统一按「5 秒无操作自动隐藏」处理
+                resetAutoHide();
             }
 
             @Override
@@ -710,11 +716,13 @@ public class PlayActivity extends AppCompatActivity {
         if (tvQuality != null) tvQuality.setVisibility(View.GONE);
         if (tvTopInfo != null) tvTopInfo.setVisibility(View.GONE);
         hideHandler.removeCallbacks(hideRunnable);
-        // 滚动并聚焦当前集, 方便遥控器继续选择
+        // 收纳: 自动切到当前集所在的页码范围, 并把焦点落到当前集
+        selectEpisodeRange(Math.max(index, 0) / EPISODE_RANGE_SIZE);
         if (rvEpisodes != null) {
             rvEpisodes.post(() -> {
-                rvEpisodes.scrollToPosition(Math.max(index, 0));
-                RecyclerView.ViewHolder vh = rvEpisodes.findViewHolderForAdapterPosition(index);
+                int local = Math.max(0, index - episodeRangeStart);
+                if (local > 0) rvEpisodes.scrollToPosition(local);
+                RecyclerView.ViewHolder vh = rvEpisodes.findViewHolderForAdapterPosition(local);
                 if (vh != null) vh.itemView.requestFocus();
             });
         }
@@ -727,6 +735,59 @@ public class PlayActivity extends AppCompatActivity {
         setControlsVisibility(View.VISIBLE);
         controlsVisible = true;
         resetAutoHide();
+    }
+
+    /** 构建页码范围行(1-30 / 31-60 ...), 剧集不超过一页时不显示 */
+    private void buildEpisodeRangeRow() {
+        if (episodeRangeRow == null) return;
+        episodeRangeRow.removeAllViews();
+        int total = episodes == null ? 0 : episodes.size();
+        int groups = (total + EPISODE_RANGE_SIZE - 1) / EPISODE_RANGE_SIZE;
+        // 只有一页时无需收纳, 直接隐藏整行
+        if (episodeRangeScroll != null) {
+            episodeRangeScroll.setVisibility(groups > 1 ? View.VISIBLE : View.GONE);
+        }
+        if (groups <= 1) return;
+        for (int g = 0; g < groups; g++) {
+            final int group = g;
+            int from = g * EPISODE_RANGE_SIZE + 1;
+            int to = Math.min((g + 1) * EPISODE_RANGE_SIZE, total);
+            TextView tv = new TextView(this);
+            tv.setText(from + "-" + to);
+            TextScaleUtil.apply(tv, 24);
+            tv.setTextColor(getResources().getColor(R.color.sm_text));
+            tv.setBackgroundResource(R.drawable.bg_episode_selector);
+            tv.setPadding(30, 12, 30, 12);
+            tv.setFocusable(true);
+            tv.setClickable(true);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.setMargins(0, 0, 14, 0);
+            tv.setLayoutParams(lp);
+            setupFocusAnim(tv);
+            tv.setOnClickListener(v -> selectEpisodeRange(group));
+            episodeRangeRow.addView(tv);
+        }
+    }
+
+    /** 只展示第 group 页剧集(每 EPISODE_RANGE_SIZE 集一页), 并同步页码高亮 */
+    private void selectEpisodeRange(int group) {
+        int total = episodes == null ? 0 : episodes.size();
+        int groups = (total + EPISODE_RANGE_SIZE - 1) / EPISODE_RANGE_SIZE;
+        if (groups <= 0) groups = 1;
+        if (group < 0) group = 0;
+        if (group >= groups) group = groups - 1;
+        episodeRangeStart = group * EPISODE_RANGE_SIZE;
+        if (episodeAdapter != null) {
+            episodeAdapter.setRange(episodeRangeStart, Math.min(episodeRangeStart + EPISODE_RANGE_SIZE, total));
+        }
+        if (episodeRangeRow != null) {
+            for (int i = 0; i < episodeRangeRow.getChildCount(); i++) {
+                View child = episodeRangeRow.getChildAt(i);
+                if (child instanceof TextView) ((TextView) child).setSelected(i == group);
+            }
+        }
+        if (rvEpisodes != null) rvEpisodes.scrollToPosition(0);
     }
 
     /** 切换控制层显隐: 播放时点击视频区域显示/隐藏控制条 */
@@ -767,10 +828,12 @@ public class PlayActivity extends AppCompatActivity {
         if (tvTopInfo != null) tvTopInfo.setVisibility(visibility);
     }
 
-    /** 重置自动隐藏计时: 仅在播放中且控制层可见时启动倒计时 */
+    /** 重置自动隐藏计时: 控制层可见时, 5 秒无操作即自动隐藏(播放/暂停均生效) */
     private void resetAutoHide() {
         hideHandler.removeCallbacks(hideRunnable);
-        if (controlsVisible && kernel != null && kernel.isPlaying()) {
+        // 选集面板展开时不自动隐藏, 避免挑选剧集时被收起
+        boolean episodePanelOpen = episodePanel != null && episodePanel.getVisibility() == View.VISIBLE;
+        if (controlsVisible && !episodePanelOpen) {
             hideHandler.postDelayed(hideRunnable, AUTO_HIDE_DELAY);
         }
     }
@@ -797,6 +860,8 @@ public class PlayActivity extends AppCompatActivity {
      */
     private void showSeekDialog() {
         if (kernel == null) return;
+        // 对话框期间不做自动隐藏, 关闭后再重新计时
+        hideHandler.removeCallbacks(hideRunnable);
         final long dur = kernel.getDuration();
         if (dur <= 0) {
             Toast.makeText(this, "时长未知, 请稍后再试", Toast.LENGTH_SHORT).show();
@@ -851,7 +916,7 @@ public class PlayActivity extends AppCompatActivity {
                     hideHandler.postDelayed(hideGestureRunnable, 1500);
                     resetAutoHide();
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton("取消", (d, w) -> resetAutoHide())
                 .show();
     }
 
@@ -982,6 +1047,8 @@ public class PlayActivity extends AppCompatActivity {
     @Override
     public boolean dispatchKeyEvent(android.view.KeyEvent event) {
         if (event.getAction() == android.view.KeyEvent.ACTION_DOWN) {
+            // 任意按键操作都重新计时: 控制层停留 5 秒无操作才隐藏
+            resetAutoHide();
             switch (event.getKeyCode()) {
                 case android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                 case android.view.KeyEvent.KEYCODE_HEADSETHOOK:
