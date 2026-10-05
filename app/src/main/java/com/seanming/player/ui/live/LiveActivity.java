@@ -141,6 +141,9 @@ public class LiveActivity extends AppCompatActivity {
         setupFocusAnim(findViewById(R.id.btnBack));
         // 点击信息区查看完整节目单
         infoPanel.setOnClickListener(v -> showEpgDialog());
+        // 触屏: 点击画面呼出/收起选台面板(遥控器仍用 OK 键)
+        // 不加 focusable, 避免触点先被用于取焦点而吞掉第一次点击
+        playerView.setOnClickListener(v -> togglePanel());
 
         epgTimelineScroll = findViewById(R.id.epgTimelineScroll);
         epgTimeline = findViewById(R.id.epgTimeline);
@@ -165,7 +168,8 @@ public class LiveActivity extends AppCompatActivity {
         rvChannels.setLayoutManager(new LinearLayoutManager(this));
         rvChannels.setAdapter(channelAdapter);
         // 影视仓行为: 列表项获得焦点即切台
-        channelAdapter.setOnFocus(this::playChannel);
+        // (焦点落回当前频道时跳过重播, 避免呼出面板/回滚列表时无谓重连)
+        channelAdapter.setOnFocus(this::onChannelFocused);
         channelAdapter.setOnClick(this::playChannel);
 
         groupAdapter = new LiveGroupAdapter();
@@ -653,22 +657,52 @@ public class LiveActivity extends AppCompatActivity {
 
     // ================= 面板显隐 =================
 
+    /** 点击画面: 呼出/收起选台面板(触屏设备); 多屏模式下不弹选台 */
+    private void togglePanel() {
+        if (multiMode) return;
+        if (panelVisible) {
+            hidePanel();
+        } else {
+            showPanel();
+        }
+    }
+
+    /** 列表项获得焦点即切台; 焦点落回当前频道时跳过, 避免重复起播/重连 */
+    private void onChannelFocused(LiveChannel ch) {
+        if (ch == null) return;
+        int idx = currentChannels != null ? currentChannels.indexOf(ch) : -1;
+        if (idx >= 0 && idx == currentChannel) return;
+        playChannel(ch);
+    }
+
     private void showPanel() {
         panelVisible = true;
+        // 先取消动画再设可见, 避免上一次隐藏动画的收尾动作把面板又置为不可见
+        channelPanel.animate().cancel();
+        infoPanel.animate().cancel();
         channelPanel.setVisibility(View.VISIBLE);
         infoPanel.setVisibility(View.VISIBLE);
+        channelPanel.setAlpha(0f);
+        infoPanel.setAlpha(0f);
         channelPanel.animate().alpha(1f).setDuration(150).start();
-        rvChannels.post(() -> rvChannels.requestFocus());
+        infoPanel.animate().alpha(1f).setDuration(150).start();
+        // 焦点落到"当前频道"而不是列表首项, 避免呼出面板时跳到第一个台
+        if (currentChannel >= 0) {
+            scrollChannelTo(currentChannel);
+        } else {
+            rvChannels.post(() -> rvChannels.requestFocus());
+        }
     }
 
     private void hidePanel() {
         panelVisible = false;
-        channelPanel.animate().alpha(0f).setDuration(150)
-                .withEndAction(() -> channelPanel.setVisibility(View.INVISIBLE)).start();
-        infoPanel.animate().alpha(0f).setDuration(150)
-                .withEndAction(() -> infoPanel.setVisibility(View.INVISIBLE)).start();
-        // 主动收起时把焦点交回播放器区域, 退出 touch 无关的焦点态
-        playerView.requestFocus();
+        // 立即置为不可见(不使用动画收尾回调), 保证显隐状态确定
+        channelPanel.animate().cancel();
+        infoPanel.animate().cancel();
+        channelPanel.setVisibility(View.INVISIBLE);
+        infoPanel.setVisibility(View.INVISIBLE);
+        channelPanel.setAlpha(0f);
+        infoPanel.setAlpha(0f);
     }
 
     /** 当前焦点是否在右侧面板内部 */
