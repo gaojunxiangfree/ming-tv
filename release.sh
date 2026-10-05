@@ -84,6 +84,17 @@ usage() {
     awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "${BASH_SOURCE[0]}"
 }
 
+# 取某个 JDK 的主版本号: JDK8 -> 8, JDK17 -> 17; 不可用则输出空
+# (JDK8 及更早的版本串是 "1.8.0_x", 主版本要取第二段)
+java_major() {
+    local home="${1:-}" raw a b
+    [ -n "$home" ] && [ -x "$home/bin/java" ] || return 0
+    raw="$("$home/bin/java" -version 2>&1 | sed -nE '1s/.*version "([0-9]+)\.([0-9]+).*/\1 \2/p')"
+    [ -n "$raw" ] || return 0
+    a="${raw%% *}"; b="${raw##* }"
+    if [ "$a" = "1" ]; then printf '%s' "$b"; else printf '%s' "$a"; fi
+}
+
 # ---------------------------------------------------------------- 参数解析
 VERSION=""
 DRAFT=0
@@ -274,12 +285,18 @@ trap cleanup EXIT
 if [ "$SKIP_BUILD" = "1" ]; then
     info "跳过编译(--skip-build)"
 else
-    if [ -z "${JAVA_HOME:-}" ] || [ ! -x "${JAVA_HOME:-}/bin/java" ]; then
+    # AGP 8.x 要求 JDK17: 当前 JAVA_HOME 若不是 17, 一律改用系统注册的 17,
+    # 避免环境里残留的 JDK8 被直接拿去编译而失败
+    CUR_JAVA_MAJOR="$(java_major "${JAVA_HOME:-}")"
+    if [ "$CUR_JAVA_MAJOR" != "17" ]; then
+        [ -z "$CUR_JAVA_MAJOR" ] || warn "JAVA_HOME 指向 JDK${CUR_JAVA_MAJOR}, 本项目需要 JDK17, 尝试自动切换"
         if [ -x /usr/libexec/java_home ]; then
             JAVA_HOME="$(/usr/libexec/java_home -v 17 2>/dev/null || true)"
         fi
     fi
-    [ -n "${JAVA_HOME:-}" ] || die "未找到 JDK17, 请设置 JAVA_HOME"
+    if [ "$(java_major "${JAVA_HOME:-}")" != "17" ]; then
+        die "未找到 JDK17 (当前 JAVA_HOME=${JAVA_HOME:-未设置}), 请安装 JDK17 或显式设置 JAVA_HOME"
+    fi
     export JAVA_HOME
     info "使用 JAVA_HOME=$JAVA_HOME"
 
