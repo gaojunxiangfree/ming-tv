@@ -483,6 +483,27 @@
                 android:textColor="@color/sm_text_dim" />
         </LinearLayout>
 
+        <!-- 页码范围收纳行(如 1-30 / 31-60), 仅剧集超过一页时显示 -->
+        <HorizontalScrollView
+            android:id="@+id/episodeRangeScroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:scrollbars="none"
+            android:focusable="false"
+            android:descendantFocusability="afterDescendants"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/episodeRangeRow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingBottom="10dp"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
         <!-- 平铺网格: 固定约三行高度, 列数由 ScreenUtil 按屏宽自适应 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvEpisodes"
