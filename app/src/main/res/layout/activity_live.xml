@@ -28,6 +28,24 @@
         android:textSize="@dimen/sm_text_body"
         android:textColor="@color/sm_text" />
 
+    <!-- 数字键选台提示: 输入频道号时短暂显示 -->
+    <TextView
+        android:id="@+id/tvNumberInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_badge"
+        android:paddingLeft="30dp"
+        android:paddingTop="10dp"
+        android:paddingRight="30dp"
+        android:paddingBottom="10dp"
+        android:textSize="@dimen/sm_text_title"
+        android:textColor="@color/sm_text"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
     <!-- 左侧底部: 当前频道 + EPG 正在播/下一节目 -->
     <LinearLayout
         android:id="@+id/infoPanel"
@@ -41,33 +59,45 @@
         android:layout_marginBottom="24dp"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvChannelName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/sm_text_title"
-            android:textColor="@color/sm_text"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/tvNow"
+        <!-- 节目信息区: 仅此区域点击查看完整节目单,
+             面板空白/EPG 时间线区域不再误触发 -->
+        <LinearLayout
+            android:id="@+id/programInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textSize="@dimen/sm_text_small"
-            android:textColor="@color/sm_primary" />
+            android:orientation="vertical"
+            android:clickable="true"
+            android:paddingTop="4dp"
+            android:paddingBottom="6dp">
 
-        <TextView
-            android:id="@+id/tvNext"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textSize="@dimen/sm_text_small"
-            android:textColor="@color/sm_text_dim" />
+            <TextView
+                android:id="@+id/tvChannelName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/sm_text_title"
+                android:textColor="@color/sm_text"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvNow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textSize="@dimen/sm_text_small"
+                android:textColor="@color/sm_primary" />
+
+            <TextView
+                android:id="@+id/tvNext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textSize="@dimen/sm_text_small"
+                android:textColor="@color/sm_text_dim" />
+        </LinearLayout>
 
         <!-- EPG 时间线: 横向展示今日节目, 当前节目高亮+打点, 左右浏览, OK 回看已播节目 -->
         <HorizontalScrollView
