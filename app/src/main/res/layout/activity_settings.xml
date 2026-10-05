@@ -154,6 +154,96 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
+                android:text="直播源"
+                android:textSize="@dimen/sm_text_title"
+                android:textColor="@color/sm_text"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvLiveStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="@dimen/sm_text_small"
+                android:textColor="@color/sm_text_dim"
+                android:text="已保存的直播源: 长按删除; 列表内全部同时生效" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:focusable="false"
+                android:descendantFocusability="afterDescendants"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/liveSourcesContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etLiveUrl"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_search_box"
+                    android:padding="12dp"
+                    android:hint="粘贴 m3u / txt 直播源地址"
+                    android:textColorHint="@color/sm_text_dim"
+                    android:textSize="@dimen/sm_text_body"
+                    android:textColor="@color/sm_text"
+                    android:singleLine="true" />
+
+                <TextView
+                    android:id="@+id/btnAddLive"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="14dp"
+                    android:background="@drawable/bg_button_selector"
+                    android:paddingLeft="24dp"
+                    android:paddingTop="10dp"
+                    android:paddingRight="24dp"
+                    android:paddingBottom="10dp"
+                    android:focusable="true"
+                    android:text="添加"
+                    android:textSize="@dimen/sm_text_body"
+                    android:textColor="@color/sm_text" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvLiveUseApiLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textSize="@dimen/sm_text_small"
+                android:textColor="@color/sm_text_dim"
+                android:text="是否额外跟随接口自带直播源 (默认关)" />
+
+            <LinearLayout
+                android:id="@+id/liveUseApiContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:background="@color/sm_live_divider" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:text="播放器设置"
                 android:textSize="@dimen/sm_text_title"
                 android:textColor="@color/sm_text"
@@ -401,6 +491,51 @@
                 android:text="@string/app_signature"
                 android:textSize="@dimen/sm_text_body"
                 android:textColor="@color/sm_text_dim" />
+
+            <TextView
+                android:id="@+id/tvVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textSize="@dimen/sm_text_small"
+                android:textColor="@color/sm_text_dim"
+                android:text="当前版本" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnCheckUpdate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_button_selector"
+                    android:paddingLeft="24dp"
+                    android:paddingTop="10dp"
+                    android:paddingRight="24dp"
+                    android:paddingBottom="10dp"
+                    android:focusable="true"
+                    android:text="检查更新"
+                    android:textSize="@dimen/sm_text_body"
+                    android:textColor="@color/sm_text" />
+
+                <TextView
+                    android:id="@+id/tvUpdateStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:gravity="center_vertical"
+                    android:textSize="@dimen/sm_text_small"
+                    android:textColor="@color/sm_primary" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:background="@color/sm_live_divider" />
         </LinearLayout>
     </ScrollView>
 </RelativeLayout>

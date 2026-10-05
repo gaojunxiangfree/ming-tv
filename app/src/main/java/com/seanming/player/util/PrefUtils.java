@@ -26,6 +26,14 @@ public class PrefUtils {
     public static final String K_API_URL = "api_url";
     /** 已推送的接口源列表(JSON 数组), 多源管理时可选其一生效 */
     public static final String K_API_SOURCES = "api_sources";
+    /** 内置接口源是否已一次性并入列表(并入后用户长按删除不再复活) */
+    public static final String K_API_SOURCES_SEEDED = "api_sources_seeded";
+    /** 独立直播源列表(JSON 数组), 与接口源分开配置; 列表内全部生效 */
+    public static final String K_LIVE_SOURCES = "live_sources";
+    /** 内置直播源是否已一次性并入列表 */
+    public static final String K_LIVE_SOURCES_SEEDED = "live_sources_seeded";
+    /** 是否额外跟随接口自带的直播源: "1"是 / "0"否 */
+    public static final String K_LIVE_USE_API = "live_use_api";
     public static final String K_HOME_SITE = "home_site";
     public static final String K_ANIMATION = "animation_enabled";
     public static final String K_BG_EFFECT = "bg_effect_enabled";
@@ -63,6 +71,8 @@ public class PrefUtils {
     public static final String K_LIVE_CHANNEL = "live_channel_index";
     /** 动态文字大小档位: "0"标准 / "1"偏大 / "2"超大 */
     public static final String K_TEXT_SCALE = "text_scale";
+    /** 被忽略的更新版本号(versionCode), 自动检查时跳过该版本 */
+    public static final String K_UPDATE_IGNORE = "update_ignore_version";
 
     // ---- 开屏页 ----
     /** 情话展示开关: "1"开 / "0"关 */

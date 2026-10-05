@@ -9,6 +9,13 @@
         android:layout_height="match_parent"
         android:keepScreenOn="true" />
 
+    <!-- IJK 兜底渲染容器: 一起看等 FLV 分组 Media3 不支持, 降级到这里播放 -->
+    <FrameLayout
+        android:id="@+id/playerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/btnBack"
         android:layout_width="wrap_content"

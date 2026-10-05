@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -33,6 +34,8 @@ import com.seanming.player.bean.LiveChannel;
 import com.seanming.player.bean.LiveChannelGroup;
 import com.seanming.player.ui.adapter.LiveChannelAdapter;
 import com.seanming.player.ui.adapter.LiveGroupAdapter;
+import com.seanming.player.ui.play.IjkKernel;
+import com.seanming.player.ui.play.PlayerKernel;
 import com.seanming.player.util.OkHttpUtil;
 import com.seanming.player.util.PrefUtils;
 
@@ -58,6 +61,14 @@ public class LiveActivity extends AppCompatActivity {
     private static final String TAG = "LiveActivity";
 
     private PlayerView playerView;
+    /** IJK 兜底播放时的渲染容器(与 playerView 同尺寸叠加, 默认隐藏) */
+    private FrameLayout playerContainer;
+    /** IJK 兜底内核: 一起看/斗鱼等 FLV 分组 Media3 不支持, 降级到 IJK(FFmpeg) 播放 */
+    private IjkKernel ijkKernel;
+    /** 当前频道是否已尝试过 IJK 兜底(每频道只降级一次, 避免循环) */
+    private boolean ijkFallback = false;
+    /** IJK 当前是否正在使用中 */
+    private boolean ijkActive = false;
     private ExoPlayer player;
     private DefaultHttpDataSource.Factory httpFactory;
     /** 普通文件(HLS 之外的)与 HLS 两套 MediaSource 工厂, 由地址后缀自动选择 */
@@ -131,6 +142,7 @@ public class LiveActivity extends AppCompatActivity {
         setContentView(R.layout.activity_live);
 
         playerView = findViewById(R.id.playerView);
+        playerContainer = findViewById(R.id.playerContainer);
         rvChannels = findViewById(R.id.rvChannels);
         rvGroups = findViewById(R.id.rvGroups);
         tvChannelName = findViewById(R.id.tvChannelName);
@@ -277,6 +289,9 @@ public class LiveActivity extends AppCompatActivity {
 
     private void playChannel(LiveChannel ch) {
         if (ch == null) return;
+        // 切台: 退出上一频道的 IJK 兜底态, 回到 Exo 主链路重新尝试
+        if (ijkActive) releaseIjk();
+        ijkFallback = false;
         int idx = currentChannels != null ? currentChannels.indexOf(ch) : -1;
         if (idx >= 0) {
             currentChannel = idx;
@@ -480,6 +495,9 @@ public class LiveActivity extends AppCompatActivity {
         tvChannelName.setText(ch.name + " 【回看】");
         tvNow.setText("回看: " + pg.title);
         tvNext.setText("");
+        // 回看走 Exo 主链路, 若当前处于 IJK 兜底态先退出
+        if (ijkActive) releaseIjk();
+        ijkFallback = false;
         Map<String, String> hdrs = new HashMap<>();
         hdrs.put("User-Agent", ch.httpUserAgent != null && !ch.httpUserAgent.isEmpty()
                 ? ch.httpUserAgent : OkHttpUtil.UA);
@@ -513,6 +531,8 @@ public class LiveActivity extends AppCompatActivity {
 
     private void enterMulti() {
         if (currentChannels == null || currentChannels.isEmpty()) return;
+        // 多屏统一使用 Exo, 若当前处于 IJK 兜底态先退出
+        if (ijkActive) releaseIjk();
         multiContainer.setVisibility(View.VISIBLE);
         playerView.setVisibility(View.GONE);
         multiMode = true;
@@ -577,6 +597,9 @@ public class LiveActivity extends AppCompatActivity {
             @Override
             public void onPlayerError(PlaybackException error) {
                 Log.w(TAG, "play error: " + error.getErrorCodeName());
+                // 一起看/斗鱼等分组为 FLV 流, Media3 不支持 FLV;
+                // 先尝试 IJK(FFmpeg) 兜底, IJK 也失败才自动跳台
+                if (!multiMode && !ijkFallback && tryIjkFallback()) return;
                 autoSkip();
             }
 
@@ -616,9 +639,84 @@ public class LiveActivity extends AppCompatActivity {
     }
 
     private void togglePlayPause() {
+        if (ijkActive) {
+            if (ijkKernel == null) return;
+            if (ijkKernel.isPlaying()) ijkKernel.pause();
+            else ijkKernel.play();
+            return;
+        }
         if (player == null) return;
         if (player.isPlaying()) player.pause();
         else player.play();
+    }
+
+    // ================= IJK 兜底(FLV 等 Media3 不支持的直播) =================
+
+    /**
+     * Exo 播放失败时降级 IJK. 每个频道只降级一次; 成功返回 true.
+     */
+    private boolean tryIjkFallback() {
+        LiveChannel ch = currentChannelObj();
+        if (ch == null) return false;
+        String url = ch.currentUrl();
+        if (url == null || url.isEmpty()) return false;
+        ijkFallback = true;
+        Log.i(TAG, "Exo 不支持, 降级 IJK: " + ch.name + " url=" + url);
+        startIjk(url, ch);
+        return true;
+    }
+
+    private void startIjk(String url, LiveChannel ch) {
+        // Exo 让出画面与声音
+        if (player != null) player.stop();
+        if (ijkKernel == null) {
+            ijkKernel = new IjkKernel(true);
+            ijkKernel.setListener(new PlayerKernel.Listener() {
+                @Override
+                public void onStateChanged(int state) {
+                    // 出画面即认为可用, 重置跳台计数
+                    if (state == PlayerKernel.STATE_READY) autoSkipCount = 0;
+                }
+
+                @Override
+                public void onIsPlayingChanged(boolean isPlaying) {}
+
+                @Override
+                public void onError(String message) {
+                    Log.w(TAG, "IJK 失败, 转自动跳台: " + message);
+                    releaseIjk();
+                    autoSkip();
+                }
+
+                @Override
+                public void onQualitiesChanged(List<PlayerKernel.Quality> qualities) {}
+
+                @Override
+                public void onVideoSizeChanged(int width, int height) {}
+            });
+            ijkKernel.init(this, playerContainer);
+        }
+        playerView.setVisibility(View.GONE);
+        playerContainer.setVisibility(View.VISIBLE);
+        ijkActive = true;
+        // 部分直播源需要特定 UA, 与 Exo 链路保持一致
+        String ua = ch.httpUserAgent != null && !ch.httpUserAgent.isEmpty()
+                ? ch.httpUserAgent : OkHttpUtil.UA;
+        Map<String, String> hdrs = new HashMap<>();
+        hdrs.put("User-Agent", ua);
+        ijkKernel.setDataSource(url, hdrs, 0);
+        ijkKernel.play();
+    }
+
+    /** 释放 IJK 并把画面交还 Exo 的 playerView */
+    private void releaseIjk() {
+        if (ijkKernel != null) {
+            ijkKernel.release();
+            ijkKernel = null;
+        }
+        ijkActive = false;
+        if (playerContainer != null) playerContainer.setVisibility(View.GONE);
+        if (playerView != null) playerView.setVisibility(View.VISIBLE);
     }
 
     // ================= 切台/切组 =================
@@ -826,18 +924,41 @@ public class LiveActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // 设置页改过直播源(增删/跟随接口自带)后回到直播页: 重新拉取频道列表
+        if (ApiConfig.get().consumeLiveReloadPending()) {
+            retryCount = 0;
+            groups = ApiConfig.get().getLiveGroups();
+            if (groups != null && !groups.isEmpty()) {
+                List<String> names = new ArrayList<>();
+                for (LiveChannelGroup g : groups) names.add(g.name);
+                groupAdapter.submit(names);
+                selectGroup(currentGroup >= 0 && currentGroup < groups.size() ? currentGroup : 0);
+            } else {
+                loadGroups();
+            }
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         // 收起数字键提示并清空输入缓冲, 避免残留
         hideNumberInput();
         numberBuf.setLength(0);
         if (player != null) player.pause();
+        if (ijkActive && ijkKernel != null) ijkKernel.pause();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
+        if (ijkKernel != null) {
+            ijkKernel.release();
+            ijkKernel = null;
+        }
         if (player != null) player.release();
         for (int i = 0; i < 4; i++) {
             if (multiPlayers[i] != null) multiPlayers[i].release();

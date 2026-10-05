@@ -1,5 +1,6 @@
 package com.seanming.player.ui.settings;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,9 +17,11 @@ import com.seanming.player.R;
 import com.seanming.player.api.ApiConfig;
 import com.seanming.player.data.AppDatabase;
 import com.seanming.player.server.WifiConfigServer;
+import com.seanming.player.ui.update.UpdateDialog;
 import com.seanming.player.util.PrefUtils;
 import com.seanming.player.util.TextScaleUtil;
 import com.seanming.player.util.ThreadUtils;
+import com.seanming.player.util.UpdateManager;
 
 import java.util.List;
 
@@ -40,11 +43,17 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView tvTextScaleSample;
     private LinearLayout splashContainer;
     private LinearLayout apiSourcesContainer;
+    private LinearLayout liveSourcesContainer;
+    private LinearLayout liveUseApiContainer;
+    private TextView tvLiveStatus;
+    private EditText etLiveUrl;
     private LinearLayout renderContainer;
     private LinearLayout danmuToggleContainer;
     private LinearLayout loopContainer;
     private LinearLayout p2pContainer;
     private LinearLayout dataContainer;
+    private TextView tvVersion;
+    private TextView tvUpdateStatus;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,6 +64,10 @@ public class SettingsActivity extends AppCompatActivity {
         tvApiStatus = findViewById(R.id.tvApiStatus);
         tvPushUrl = findViewById(R.id.tvPushUrl);
         apiSourcesContainer = findViewById(R.id.apiSourcesContainer);
+        liveSourcesContainer = findViewById(R.id.liveSourcesContainer);
+        liveUseApiContainer = findViewById(R.id.liveUseApiContainer);
+        tvLiveStatus = findViewById(R.id.tvLiveStatus);
+        etLiveUrl = findViewById(R.id.etLiveUrl);
         playerContainer = findViewById(R.id.playerContainer);
         ijkDecoderContainer = findViewById(R.id.ijkDecoderContainer);
         danmuStyleContainer = findViewById(R.id.danmuStyleContainer);
@@ -68,13 +81,19 @@ public class SettingsActivity extends AppCompatActivity {
         loopContainer = findViewById(R.id.loopContainer);
         p2pContainer = findViewById(R.id.p2pContainer);
         dataContainer = findViewById(R.id.dataContainer);
+        tvVersion = findViewById(R.id.tvVersion);
+        tvUpdateStatus = findViewById(R.id.tvUpdateStatus);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.btnLoadApi).setOnClickListener(v -> loadApi());
+        findViewById(R.id.btnAddLive).setOnClickListener(v -> addLiveSource());
+        findViewById(R.id.btnCheckUpdate).setOnClickListener(v -> checkUpdate());
+        tvVersion.setText("当前版本 v" + UpdateManager.currentVersionName());
 
         etApiUrl.setText(PrefUtils.get(PrefUtils.K_API_URL, ""));
         refreshStatus();
         renderApiSources();
+        renderLiveSection();
         renderPlayerSection();
         renderPlayToggles();
         renderDataSection();
@@ -91,6 +110,33 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         WifiConfigServer.get().stop();
+    }
+
+    /** 手动检查更新(码云发行版): 有新版本弹升级框, 无则提示已是最新 */
+    private void checkUpdate() {
+        tvUpdateStatus.setText("检查中…");
+        UpdateManager.check(new UpdateManager.CheckCallback() {
+            @Override
+            public void onResult(UpdateManager.ReleaseInfo info) {
+                tvUpdateStatus.setText(info.hasUpdate
+                        ? "发现新版本 v" + info.versionName : "已是最新版本");
+                UpdateDialog.show(SettingsActivity.this, info, true);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                tvUpdateStatus.setText("检查失败, 请检查网络");
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // 从"安装未知来源应用"授权页返回: 已授权则提示再次检查
+        if (requestCode == UpdateDialog.REQUEST_INSTALL_PERMISSION && UpdateManager.canInstall(this)) {
+            Toast.makeText(this, "已授权, 请再点一次「检查更新」完成升级", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void loadApi() {
@@ -172,6 +218,74 @@ public class SettingsActivity extends AppCompatActivity {
         String url = ApiConfig.get().getApiUrl();
         int count = ApiConfig.get().getSites().size();
         tvApiStatus.setText("当前接口: " + (url.isEmpty() ? "未配置" : url) + "  |  站点数: " + count);
+    }
+
+    // ================= 直播源(与接口源分开) =================
+
+    /** 添加一个直播源并立即重新解析 */
+    private void addLiveSource() {
+        String url = etLiveUrl.getText().toString().trim();
+        if (url.isEmpty()) {
+            Toast.makeText(this, "请输入直播源地址", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ApiConfig.get().addLiveSource(url);
+        etLiveUrl.setText("");
+        renderLiveSection();
+        Toast.makeText(this, "已添加直播源, 正在重新加载", Toast.LENGTH_SHORT).show();
+    }
+
+    /** 渲染直播源列表(长按删除) + 是否跟随接口自带直播源的开关 */
+    private void renderLiveSection() {
+        if (liveSourcesContainer == null) return;
+        liveSourcesContainer.removeAllViews();
+        List<String> sources = ApiConfig.get().getLiveSources();
+        if (sources.isEmpty()) {
+            TextView empty = new TextView(this);
+            empty.setText("暂无直播源, 可在下方输入添加");
+            empty.setTextSize(22);
+            empty.setTextColor(getColor(R.color.sm_text_dim));
+            empty.setPadding(0, 6, 0, 6);
+            liveSourcesContainer.addView(empty);
+        } else {
+            for (final String url : sources) {
+                TextView tv = (TextView) LayoutInflater.from(this)
+                        .inflate(R.layout.item_tab, liveSourcesContainer, false);
+                // 单行横排: 省去协议前缀压缩宽度
+                tv.setText(url.replaceFirst("^https?://", ""));
+                addFocus(tv);
+                tv.setOnLongClickListener(v -> {
+                    ApiConfig.get().removeLiveSource(url);
+                    renderLiveSection();
+                    Toast.makeText(this, "已删除直播源, 正在重新加载", Toast.LENGTH_SHORT).show();
+                    return true;
+                });
+                liveSourcesContainer.addView(tv);
+            }
+        }
+        if (tvLiveStatus != null) {
+            tvLiveStatus.setText("已保存的直播源: 长按删除; 列表内全部同时生效"
+                    + "  |  接口自带: " + ApiConfig.get().getApiLiveCount() + " 条");
+        }
+        // 是否跟随接口自带的直播源
+        if (liveUseApiContainer == null) return;
+        liveUseApiContainer.removeAllViews();
+        boolean useApi = ApiConfig.get().isLiveUseApi();
+        final String[][] opts = {{"0", "不跟随"}, {"1", "跟随"}};
+        for (String[] p : opts) {
+            TextView tv = (TextView) LayoutInflater.from(this)
+                    .inflate(R.layout.item_tab, liveUseApiContainer, false);
+            boolean sel = useApi == "1".equals(p[0]);
+            tv.setText(p[1] + (sel ? " (当前)" : ""));
+            tv.setSelected(sel);
+            addFocus(tv);
+            tv.setOnClickListener(v -> {
+                ApiConfig.get().setLiveUseApi("1".equals(p[0]));
+                renderLiveSection();
+                Toast.makeText(this, "已更新, 正在重新加载直播源", Toast.LENGTH_SHORT).show();
+            });
+            liveUseApiContainer.addView(tv);
+        }
     }
 
     /** 渲染播放器内核选择 (Exo/IJK) + IJK 解码模式 (硬解/软解) */

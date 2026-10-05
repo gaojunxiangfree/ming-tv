@@ -57,6 +57,23 @@ public class App extends Application {
                 return true;
             }
         }
+        // wex 运行期代理库 GoProxy 初始化失败还有一种表现: 代理库文件不存在
+        // (被清理/源端对象已删), 抛的是普通 FileNotFoundException,
+        // 上面按 UnsatisfiedLinkError 判断会漏掉, 导致切换源时整个 App 被杀.
+        return isFromGoProxy(e);
+    }
+
+    /** 异常链的调用栈里是否出现 wex 运行期代理库 GoProxy.<clinit> */
+    private static boolean isFromGoProxy(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            StackTraceElement[] st = t.getStackTrace();
+            if (st == null) continue;
+            for (StackTraceElement f : st) {
+                if (f.getClassName() != null && f.getClassName().contains("catvod.spider.GoProxy")) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 升级安装包存放目录: getExternalFilesDir("apk") / getFilesDir() -->
+    <external-files-path
+        name="update_apk"
+        path="apk/" />
+    <files-path
+        name="update_apk_internal"
+        path="apk/" />
+</paths>

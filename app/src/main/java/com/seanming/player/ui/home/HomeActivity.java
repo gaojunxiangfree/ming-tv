@@ -36,8 +36,10 @@ import com.seanming.player.ui.live.LiveActivity;
 import com.seanming.player.ui.push.PushActivity;
 import com.seanming.player.ui.search.SearchActivity;
 import com.seanming.player.ui.settings.SettingsActivity;
+import com.seanming.player.ui.update.UpdateDialog;
 import com.seanming.player.util.ThreadUtils;
 import com.seanming.player.util.ScreenUtil;
+import com.seanming.player.util.UpdateManager;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -148,6 +150,28 @@ public class HomeActivity extends AppCompatActivity {
         loadHome();
         // 启动实时时钟
         clockHandler.post(clockTicker);
+        // 启动时静默检查更新(有新版本才弹窗)
+        maybeAutoCheckUpdate();
+    }
+
+    /** 每次冷启动只自动检查一次, 避免频繁请求码云接口 */
+    private static boolean autoChecked = false;
+
+    private void maybeAutoCheckUpdate() {
+        if (autoChecked) return;
+        autoChecked = true;
+        UpdateManager.check(new UpdateManager.CheckCallback() {
+            @Override
+            public void onResult(UpdateManager.ReleaseInfo info) {
+                if (isFinishing() || isDestroyed()) return;
+                UpdateDialog.show(HomeActivity.this, info, false);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // 静默失败: 启动检查不打扰用户
+            }
+        });
     }
 
     @Override
