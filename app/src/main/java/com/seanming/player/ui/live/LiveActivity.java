@@ -69,6 +69,8 @@ public class LiveActivity extends AppCompatActivity {
     private RecyclerView rvChannels, rvGroups;
 
     private TextView tvChannelName, tvNow, tvNext;
+    /** 数字键选台提示浮层 */
+    private TextView tvNumberInput;
     private View channelPanel, infoPanel;
 
     private List<LiveChannelGroup> groups = new ArrayList<>();
@@ -139,11 +141,16 @@ public class LiveActivity extends AppCompatActivity {
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         setupFocusAnim(findViewById(R.id.btnBack));
-        // 点击信息区查看完整节目单
-        infoPanel.setOnClickListener(v -> showEpgDialog());
+        tvNumberInput = findViewById(R.id.tvNumberInput);
+        // 仅"节目信息区"点击查看完整节目单, 面板空白/EPG 时间线区域不再误触发
+        findViewById(R.id.programInfo).setOnClickListener(v -> showEpgDialog());
+        // 信息区自身吸收点击, 避免空白处穿透到播放器把选台面板收起
+        infoPanel.setClickable(true);
         // 触屏: 点击画面呼出/收起选台面板(遥控器仍用 OK 键)
         // 不加 focusable, 避免触点先被用于取焦点而吞掉第一次点击
         playerView.setOnClickListener(v -> togglePanel());
+        // 面板自身吸收点击: 点面板内边距/空白处不应穿透到播放器把面板收起
+        channelPanel.setClickable(true);
 
         epgTimelineScroll = findViewById(R.id.epgTimelineScroll);
         epgTimeline = findViewById(R.id.epgTimeline);
@@ -640,6 +647,7 @@ public class LiveActivity extends AppCompatActivity {
 
     /** 数字键直接选台: 频道号匹配(或按序号) */
     private void commitNumber() {
+        hideNumberInput();
         if (numberBuf.length() == 0 || currentChannels == null) return;
         String num = numberBuf.toString();
         numberBuf.setLength(0);
@@ -653,6 +661,19 @@ public class LiveActivity extends AppCompatActivity {
                 return;
             }
         }
+        // 未命中: 给出提示, 避免静默无反馈
+        Toast.makeText(this, "未找到频道号 " + num + ", 可换个分组再试", Toast.LENGTH_SHORT).show();
+    }
+
+    /** 数字键输入提示浮层 */
+    private void showNumberInput(String digits) {
+        if (tvNumberInput == null) return;
+        tvNumberInput.setText("选台 " + digits);
+        tvNumberInput.setVisibility(View.VISIBLE);
+    }
+
+    private void hideNumberInput() {
+        if (tvNumberInput != null) tvNumberInput.setVisibility(View.GONE);
     }
 
     // ================= 面板显隐 =================
@@ -733,6 +754,8 @@ public class LiveActivity extends AppCompatActivity {
         // 数字键选台
         if (code >= KeyEvent.KEYCODE_0 && code <= KeyEvent.KEYCODE_9) {
             numberBuf.append((char) ('0' + (code - KeyEvent.KEYCODE_0)));
+            // 边输边提示, 避免用户以为按键没生效
+            showNumberInput(numberBuf.toString());
             handler.removeCallbacks(numberCommit);
             handler.postDelayed(numberCommit, 1200L);
             return true;
@@ -805,6 +828,9 @@ public class LiveActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        // 收起数字键提示并清空输入缓冲, 避免残留
+        hideNumberInput();
+        numberBuf.setLength(0);
         if (player != null) player.pause();
     }
 
