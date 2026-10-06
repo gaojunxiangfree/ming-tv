@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  电视/投影仪尺寸(可用宽度 >= 840dp, 但最小宽度 < 900dp 的宽屏大屏):
+  覆盖 1080p 电视盒子与 Android TV —— 这类设备 1920x1080 @320dpi, 最小宽度只有 540dp,
+  命不中 sw600dp/sw900dp, 再往下就落到手机档, 字号会明显偏小.
+  取值与 values-sw900dp/ 保持一致.
+-->
+<resources>
+    <dimen name="sm_text_title">36sp</dimen>
+    <dimen name="sm_text_body">28sp</dimen>
+    <dimen name="sm_text_small">24sp</dimen>
+    <dimen name="sm_text_label">24sp</dimen>
+    <dimen name="sm_text_empty">22sp</dimen>
+    <dimen name="sm_text_clock">30sp</dimen>
+    <dimen name="sm_text_epg">18sp</dimen>
+    <dimen name="sm_text_search_info">20sp</dimen>
+    <dimen name="sm_poster_w">160dp</dimen>
+    <dimen name="sm_poster_h">360dp</dimen>
+    <dimen name="sm_poster_span">20dp</dimen>
+    <dimen name="sm_focus_scale">1.08</dimen>
+    <dimen name="sm_focus_border">3dp</dimen>
+    <dimen name="sm_card_radius">10dp</dimen>
+    <dimen name="sm_safe_edge">40dp</dimen>
+</resources>

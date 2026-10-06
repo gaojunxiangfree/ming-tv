@@ -327,7 +327,7 @@ public class FastSearchActivity extends AppCompatActivity {
         TextView tv = new TextView(this);
         boolean active = (key == null && filterKey == null) || (key != null && key.equals(filterKey));
         tv.setText(label);
-        tv.setTextSize(20);
+        ScreenUtil.setTextSize(tv, R.dimen.sm_text_search_info);
         tv.setTextColor(getResources().getColor(active ? R.color.sm_primary : R.color.sm_text));
         tv.setBackgroundResource(R.drawable.bg_button_selector);
         tv.setPadding(28, 10, 28, 10);

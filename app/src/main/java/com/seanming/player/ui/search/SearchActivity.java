@@ -37,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
+import com.seanming.player.util.ScreenUtil;
 
 /**
  * 搜索页(对齐影视仓 SearchActivity).
@@ -465,7 +466,7 @@ public class SearchActivity extends AppCompatActivity {
         TextView info = new TextView(this);
         info.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         info.setGravity(Gravity.CENTER);
-        info.setTextSize(20);
+        ScreenUtil.setTextSize(info, R.dimen.sm_text_search_info);
         info.setTextColor(getResources().getColor(R.color.sm_text));
         info.setPadding(0, 24, 0, 0);
         info.setText("手机与电视连接同一 WiFi\n扫码打开 " + addr + "\n输入关键词即可在电视上搜索");
@@ -484,7 +485,7 @@ public class SearchActivity extends AppCompatActivity {
     private TextView buildWordItem(String text, View.OnClickListener onClick) {
         TextView tv = new TextView(this);
         tv.setText(text);
-        tv.setTextSize(24);
+        ScreenUtil.setTextSize(tv, R.dimen.sm_text_label);
         tv.setTextColor(getResources().getColor(R.color.sm_text));
         tv.setBackgroundResource(R.drawable.bg_button_selector);
         tv.setPadding(24, 14, 24, 14);

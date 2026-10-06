@@ -32,6 +32,7 @@ import com.seanming.player.api.EpgManager;
 import com.seanming.player.bean.EpgProgram;
 import com.seanming.player.bean.LiveChannel;
 import com.seanming.player.bean.LiveChannelGroup;
+import com.seanming.player.ui.RotatablePage;
 import com.seanming.player.ui.adapter.LiveChannelAdapter;
 import com.seanming.player.ui.adapter.LiveGroupAdapter;
 import com.seanming.player.ui.play.IjkKernel;
@@ -46,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import com.seanming.player.util.ScreenUtil;
 
 /**
  * 直播页: 分组 Tab + 频道列表 + EPG 节目单, 完整遥控器适配.
@@ -56,7 +58,7 @@ import java.util.Map;
  *  - 数字键: 直接跳台(如按 1 3 选 13 台)
  *  - 返回键: 先收面板, 再按退出
  */
-public class LiveActivity extends AppCompatActivity {
+public class LiveActivity extends AppCompatActivity implements RotatablePage {
 
     private static final String TAG = "LiveActivity";
 
@@ -351,7 +353,7 @@ public class LiveActivity extends AppCompatActivity {
         if (!EpgManager.get().isLoaded()) {
             TextView t = new TextView(this);
             t.setTextColor(getResources().getColor(R.color.sm_text_dim));
-            t.setTextSize(20);
+            ScreenUtil.setTextSize(t, R.dimen.sm_text_empty);
             t.setText("EPG 加载中...");
             epgTimeline.addView(t);
             return;
@@ -360,7 +362,7 @@ public class LiveActivity extends AppCompatActivity {
         if (list == null || list.isEmpty()) {
             TextView t = new TextView(this);
             t.setTextColor(getResources().getColor(R.color.sm_text_dim));
-            t.setTextSize(20);
+            ScreenUtil.setTextSize(t, R.dimen.sm_text_empty);
             t.setText("今日暂无节目(可回看源需频道支持 tvg-rec)");
             epgTimeline.addView(t);
             return;
@@ -375,7 +377,7 @@ public class LiveActivity extends AppCompatActivity {
             boolean past = pg.stop <= now;
             TextView seg = new TextView(this);
             seg.setPadding(dp(12), dp(6), dp(12), dp(6));
-            seg.setTextSize(18);
+            ScreenUtil.setTextSize(seg, R.dimen.sm_text_epg);
             seg.setText(hm.format(new Date(pg.start)) + " " + pg.title);
             if (playing) {
                 seg.setBackgroundColor(0xFF00BCD4);
