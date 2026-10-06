@@ -1,11 +1,14 @@
 package com.seanming.player.ui.play;
 
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,6 +32,7 @@ import com.seanming.player.bean.Vod;
 import com.seanming.player.data.AppDatabase;
 import com.seanming.player.data.HistoryRecord;
 import com.seanming.player.spider.SpiderManager;
+import com.seanming.player.ui.RotatablePage;
 import com.seanming.player.ui.adapter.EpisodeAdapter;
 import com.seanming.player.util.OkHttpUtil;
 import com.seanming.player.util.PrefUtils;
@@ -42,7 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 /** 播放页: 多内核 (Exo/IJK) + 选集 */
-public class PlayActivity extends AppCompatActivity {
+public class PlayActivity extends AppCompatActivity implements RotatablePage {
 
     /** 供详情页小窗预览使用: 全屏播放结束时的最后位置(ms).
      *  用户在全屏里快进/续播后返回, 详情页小窗由此位置续播. */
@@ -76,6 +80,8 @@ public class PlayActivity extends AppCompatActivity {
     private int episodeRangeStart = 0;
     private View btnBack;
     private View controlBar;
+    /** 手机播放页右下角的全屏触发按钮; 大屏横屏布局没有该控件, 恒为 null */
+    private ImageView btnFullscreen;
     private TextView tvTitle;
     private TextView tvPosition;
     private TextView btnPlayPause;
@@ -257,6 +263,11 @@ public class PlayActivity extends AppCompatActivity {
         rvEpisodes = findViewById(R.id.rvEpisodes);
         episodeRangeScroll = findViewById(R.id.episodeRangeScroll);
         episodeRangeRow = findViewById(R.id.episodeRangeRow);
+        // 手机竖屏布局才有该按钮, 大屏(横屏布局)为 null, 下面的判断都要判空
+        btnFullscreen = findViewById(R.id.btnFullscreen);
+        if (btnFullscreen != null) {
+            btnFullscreen.setOnClickListener(v -> toggleFullscreen());
+        }
 
         // 手势控制初始化
         audioManager = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
@@ -826,6 +837,40 @@ public class PlayActivity extends AppCompatActivity {
         if (tvPosition != null) tvPosition.setVisibility(visibility);
         if (tvQuality != null) tvQuality.setVisibility(visibility);
         if (tvTopInfo != null) tvTopInfo.setVisibility(visibility);
+        if (btnFullscreen != null) btnFullscreen.setVisibility(visibility);
+    }
+
+    // ================= 手机全屏切换 =================
+
+    /** 右下角全屏按钮: 横屏 <-> 竖屏 切换(对齐主流手机视频 App 的操作习惯) */
+    private void toggleFullscreen() {
+        boolean landscape = getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE;
+        setRequestedOrientation(landscape
+                ? ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                : ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+    }
+
+    /**
+     * 屏幕旋转回调.
+     *
+     * <p>播放页在清单里声明了 {@code configChanges=orientation|screenSize}, 所以旋转时 Activity
+     * 不会重建、布局也不会重新加载 —— 手机横屏继续用竖屏那套布局, 靠"视频区占满整屏 + 控件浮层"
+     * 直接得到全屏效果(视频区本就是 weight=1 的整屏容器)。这里只需同步两件事:
+     * 全屏按钮图标、以及把下方选集抽屉收起, 让视频铺满。
+     */
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        boolean landscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE;
+        if (btnFullscreen != null) {
+            btnFullscreen.setImageResource(landscape
+                    ? R.drawable.ic_fullscreen_exit : R.drawable.ic_fullscreen);
+            btnFullscreen.setContentDescription(landscape ? "退出全屏" : "全屏");
+        }
+        if (landscape && episodePanel != null && episodePanel.getVisibility() == View.VISIBLE) {
+            hideEpisodePanel();
+        }
     }
 
     /** 重置自动隐藏计时: 控制层可见时, 5 秒无操作即自动隐藏(播放/暂停均生效) */
@@ -871,7 +916,7 @@ public class PlayActivity extends AppCompatActivity {
 
         final TextView tvTime = new TextView(this);
         tvTime.setGravity(android.view.Gravity.CENTER);
-        tvTime.setTextSize(30f);
+        ScreenUtil.setTextSize(tvTime, R.dimen.sm_text_clock);
         tvTime.setTextColor(getResources().getColor(R.color.sm_text));
         tvTime.setText(formatMs(cur) + "  /  " + formatMs(dur));
 

@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  手机尺寸(最小宽度 < 600dp): 小字号 + 小海报, 适配竖屏触屏.
+  平板见 values-sw600dp/; 电视/投影仪见 values-w840dp/(1080p 横屏盒子) 与 values-sw900dp/(4K).
+  档位判定与 App 方向守卫、ScreenUtil 网格计算保持一致(见 ScreenUtil.deviceTier).
+-->
 <resources>
-    <dimen name="sm_text_title">36sp</dimen>
-    <dimen name="sm_text_body">28sp</dimen>
-    <dimen name="sm_text_small">24sp</dimen>
-    <dimen name="sm_poster_w">160dp</dimen>
-    <!-- 投影仪适配: 海报高度加大, 配合 ScreenUtil 按屏幕宽度动态计算列数 -->
-    <dimen name="sm_poster_h">360dp</dimen>
-    <dimen name="sm_poster_span">20dp</dimen>
-    <dimen name="sm_focus_scale">1.08</dimen>
-    <dimen name="sm_focus_border">3dp</dimen>
-    <dimen name="sm_card_radius">10dp</dimen>
-    <dimen name="sm_safe_edge">40dp</dimen>
+    <dimen name="sm_text_title">18sp</dimen>
+    <dimen name="sm_text_body">14sp</dimen>
+    <dimen name="sm_text_small">12sp</dimen>
+    <!-- 设置页分组标签 -->
+    <dimen name="sm_text_label">16sp</dimen>
+    <!-- 空态/提示文案 -->
+    <dimen name="sm_text_empty">14sp</dimen>
+    <!-- 播放页时钟 -->
+    <dimen name="sm_text_clock">18sp</dimen>
+    <!-- 直播 EPG 时间线段 -->
+    <dimen name="sm_text_epg">12sp</dimen>
+    <!-- 搜索页提示信息 -->
+    <dimen name="sm_text_search_info">13sp</dimen>
+    <dimen name="sm_poster_w">100dp</dimen>
+    <dimen name="sm_poster_h">145dp</dimen>
+    <dimen name="sm_poster_span">8dp</dimen>
+    <dimen name="sm_focus_scale">1.05</dimen>
+    <dimen name="sm_focus_border">2dp</dimen>
+    <dimen name="sm_card_radius">8dp</dimen>
+    <dimen name="sm_safe_edge">16dp</dimen>
 </resources>

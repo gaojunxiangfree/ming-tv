@@ -31,7 +31,6 @@
         <activity
             android:name=".ui.splash.SplashActivity"
             android:exported="true"
-            android:screenOrientation="landscape"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -43,31 +42,30 @@
         <activity
             android:name=".ui.home.HomeActivity"
             android:launchMode="singleTask"
-            android:screenOrientation="landscape"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
 
-        <activity android:name=".ui.detail.DetailActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.detail.DetailActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.history.HistoryActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.history.HistoryActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.collect.CollectActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.collect.CollectActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.search.SearchActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.search.SearchActivity"
             android:windowSoftInputMode="adjustPan"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.play.PlayActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.play.PlayActivity"
             android:launchMode="singleTask"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.live.LiveActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.live.LiveActivity"
             android:exported="false"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.settings.SettingsActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.settings.SettingsActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.drive.DriveActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.drive.DriveActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.push.PushActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.push.PushActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
-        <activity android:name=".ui.search.FastSearchActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.search.FastSearchActivity"
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustPan"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
@@ -90,7 +88,7 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".ui.web.WebViewActivity" android:screenOrientation="landscape"
+        <activity android:name=".ui.web.WebViewActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|screenLayout|orientation" />
 
         <!-- DLNA 投屏接收服务 (MediaRender/DMR): SSDP 发现 + HTTP 控制端 -->

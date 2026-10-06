@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.seanming.player.util.ScreenUtil;
 
 /** 设置页: 接口配置(多源管理) + 站点切换 + 扫码推送 + 播放器内核 */
 public class SettingsActivity extends AppCompatActivity {
@@ -123,7 +124,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (sources.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText("暂无推送的接口源, 可在上方输入或手机扫码推送多个接口");
-            empty.setTextSize(22);
+            ScreenUtil.setTextSize(empty, R.dimen.sm_text_empty);
             empty.setTextColor(getColor(R.color.sm_text_dim));
             empty.setPadding(0, 6, 0, 6);
             apiSourcesContainer.addView(empty);
@@ -221,7 +222,7 @@ public class SettingsActivity extends AppCompatActivity {
             ijkDecoderContainer.setVisibility(View.VISIBLE);
             TextView label = new TextView(this);
             label.setText("IJK 解码模式");
-            label.setTextSize(24);
+            ScreenUtil.setTextSize(label, R.dimen.sm_text_label);
             label.setTextColor(getColor(R.color.sm_text));
             label.setTypeface(label.getTypeface());
             label.setPadding(0, 8, 0, 4);
@@ -461,7 +462,7 @@ public class SettingsActivity extends AppCompatActivity {
         // ---- 情话开关 ----
         TextView label = new TextView(this);
         label.setText("情话展示");
-        label.setTextSize(24);
+        ScreenUtil.setTextSize(label, R.dimen.sm_text_label);
         label.setTextColor(getColor(R.color.sm_text));
         label.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         label.setPadding(0, 8, 0, 4);
@@ -488,7 +489,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (poemOn) {
             TextView label2 = new TextView(this);
             label2.setText("自定义情话 (每行一句, 留空为默认)");
-            label2.setTextSize(24);
+            ScreenUtil.setTextSize(label2, R.dimen.sm_text_label);
             label2.setTextColor(getColor(R.color.sm_text));
             label2.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             label2.setPadding(0, 16, 0, 4);
@@ -497,7 +498,7 @@ public class SettingsActivity extends AppCompatActivity {
             android.widget.EditText etPoem = new android.widget.EditText(this);
             etPoem.setText(PrefUtils.get(PrefUtils.K_SPLASH_POEM, ""));
             etPoem.setHint("示例: 山野万里\n藏在我心里的温柔➟");
-            etPoem.setTextSize(24);
+            ScreenUtil.setTextSize(etPoem, R.dimen.sm_text_label);
             etPoem.setTextColor(getColor(R.color.sm_text));
             etPoem.setHintTextColor(getColor(R.color.sm_text_dim));
             etPoem.setGravity(android.view.Gravity.TOP | android.view.Gravity.LEFT);
@@ -537,7 +538,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         TextView labelTts = new TextView(this);
         labelTts.setText("开屏语音播报 (进入 App 时朗读一句)");
-        labelTts.setTextSize(24);
+        ScreenUtil.setTextSize(labelTts, R.dimen.sm_text_label);
         labelTts.setTextColor(getColor(R.color.sm_text));
         labelTts.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         labelTts.setPadding(0, 16, 0, 4);
@@ -563,7 +564,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (ttsOn) {
             TextView labelTtsText = new TextView(this);
             labelTtsText.setText("自定义播报内容 (留空则播报: " + getString(R.string.tts_greeting) + ")");
-            labelTtsText.setTextSize(24);
+            ScreenUtil.setTextSize(labelTtsText, R.dimen.sm_text_label);
             labelTtsText.setTextColor(getColor(R.color.sm_text));
             labelTtsText.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             labelTtsText.setPadding(0, 16, 0, 4);
@@ -572,7 +573,7 @@ public class SettingsActivity extends AppCompatActivity {
             android.widget.EditText etTts = new android.widget.EditText(this);
             etTts.setText(PrefUtils.get(PrefUtils.K_SPLASH_TTS_TEXT, ""));
             etTts.setHint("示例: 欢迎回家, 茗雅");
-            etTts.setTextSize(24);
+            ScreenUtil.setTextSize(etTts, R.dimen.sm_text_label);
             etTts.setTextColor(getColor(R.color.sm_text));
             etTts.setHintTextColor(getColor(R.color.sm_text_dim));
             etTts.setSingleLine(true);
@@ -609,7 +610,7 @@ public class SettingsActivity extends AppCompatActivity {
         // ---- 背景图 ----
         TextView label3 = new TextView(this);
         label3.setText("背景图 URL (留空为默认渐变)");
-        label3.setTextSize(24);
+        ScreenUtil.setTextSize(label3, R.dimen.sm_text_label);
         label3.setTextColor(getColor(R.color.sm_text));
         label3.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         label3.setPadding(0, 16, 0, 4);
@@ -618,7 +619,7 @@ public class SettingsActivity extends AppCompatActivity {
         android.widget.EditText etBg = new android.widget.EditText(this);
         etBg.setText(PrefUtils.get(PrefUtils.K_SPLASH_BG, ""));
         etBg.setHint("如 https://xxxx/photo.jpg");
-        etBg.setTextSize(24);
+        ScreenUtil.setTextSize(etBg, R.dimen.sm_text_label);
         etBg.setTextColor(getColor(R.color.sm_text));
         etBg.setHintTextColor(getColor(R.color.sm_text_dim));
         etBg.setSingleLine(true);

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  电视/投影仪尺寸(最小宽度 >= 900dp, 如 4K 电视): 大字号 + 大海报, 满足遥控器远距离观看.
+  1080p 电视盒子/Android TV(最小宽度仅 540dp)由 values-w840dp/ 覆盖, 两处取值需保持一致.
+-->
+<resources>
+    <dimen name="sm_text_title">36sp</dimen>
+    <dimen name="sm_text_body">28sp</dimen>
+    <dimen name="sm_text_small">24sp</dimen>
+    <dimen name="sm_text_label">24sp</dimen>
+    <dimen name="sm_text_empty">22sp</dimen>
+    <dimen name="sm_text_clock">30sp</dimen>
+    <dimen name="sm_text_epg">18sp</dimen>
+    <dimen name="sm_text_search_info">20sp</dimen>
+    <dimen name="sm_poster_w">160dp</dimen>
+    <!-- 投影仪适配: 海报高度加大, 配合 ScreenUtil 按屏幕宽度动态计算列数 -->
+    <dimen name="sm_poster_h">360dp</dimen>
+    <dimen name="sm_poster_span">20dp</dimen>
+    <dimen name="sm_focus_scale">1.08</dimen>
+    <dimen name="sm_focus_border">3dp</dimen>
+    <dimen name="sm_card_radius">10dp</dimen>
+    <dimen name="sm_safe_edge">40dp</dimen>
+</resources>

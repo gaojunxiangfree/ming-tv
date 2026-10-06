@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 手机竖屏首页: 顶栏 + 功能按钮双行(5列) + 分类Tab + 网格. id 与横屏版保持一致供代码引用 -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/sm_safe_edge"
+    android:paddingRight="@dimen/sm_safe_edge">
+
+    <!-- 顶部: Logo + 站点名 + 日期时间 -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="10dp"
+        android:paddingBottom="4dp">
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_logo" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvSiteName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="@dimen/sm_text_title"
+                android:textColor="@color/sm_text"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvFreeTip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text="本应用由 Sean Gao 开源 · 仅供开发与测试使用 · 禁止商用"
+                android:textSize="11sp"
+                android:textColor="@color/sm_text_dim" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvUpdateDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:maxLines="1"
+            android:textSize="11sp"
+            android:textColor="@color/sm_text_dim" />
+    </LinearLayout>
+
+    <!-- 功能按钮: 5 列双行, 手机上不换行的横排放不下 9 个入口 -->
+    <android.widget.GridLayout
+        android:id="@+id/functionBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/topBar"
+        android:columnCount="5"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:id="@+id/btnHistory"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="🕐 历史"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+
+        <TextView
+            android:id="@+id/btnLive"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="📺 直播"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+
+        <TextView
+            android:id="@+id/btnSearch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="🔍 搜索"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+
+        <TextView
+            android:id="@+id/btnConfig"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="⚙️ 配置"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+
+        <TextView
+            android:id="@+id/btnSwitchSite"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="🛤️ 线路"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_primary" />
+
+        <TextView
+            android:id="@+id/btnDrive"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="☁️ 网盘"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_gold" />
+
+        <TextView
+            android:id="@+id/btnFavorite"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="⭐ 收藏"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+
+        <TextView
+            android:id="@+id/btnPush"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="📲 推送"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_violet" />
+
+        <TextView
+            android:id="@+id/btnSettings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_button_selector"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="⚙️ 设置"
+            android:textSize="@dimen/sm_text_body"
+            android:textColor="@color/sm_text" />
+    </android.widget.GridLayout>
+
+    <!-- 分类 Tab 横向滚动 -->
+    <HorizontalScrollView
+        android:id="@+id/tabScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/functionBar"
+        android:focusable="false"
+        android:descendantFocusability="afterDescendants"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/tabContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+    </HorizontalScrollView>
+
+    <!-- 视频网格 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/gridVod"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/tabScroll"
+        android:layout_marginTop="4dp"
+        android:focusable="true"
+        android:clipToPadding="false"
+        android:paddingTop="6dp" />
+
+    <!-- 空/加载状态 -->
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textSize="@dimen/sm_text_body"
+        android:textColor="@color/sm_text_dim"
+        android:visibility="gone" />
+</RelativeLayout>

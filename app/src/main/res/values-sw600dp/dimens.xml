@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  平板尺寸(最小宽度 600dp~899dp, 且非电视): 中等字号 + 中海报.
+  比电视小一档, 比手机大一档: 平板手持距离近, 不需要电视那样的大字号.
+-->
+<resources>
+    <dimen name="sm_text_title">24sp</dimen>
+    <dimen name="sm_text_body">20sp</dimen>
+    <dimen name="sm_text_small">16sp</dimen>
+    <dimen name="sm_text_label">20sp</dimen>
+    <dimen name="sm_text_empty">18sp</dimen>
+    <dimen name="sm_text_clock">24sp</dimen>
+    <dimen name="sm_text_epg">15sp</dimen>
+    <dimen name="sm_text_search_info">16sp</dimen>
+    <dimen name="sm_poster_w">130dp</dimen>
+    <dimen name="sm_poster_h">190dp</dimen>
+    <dimen name="sm_poster_span">12dp</dimen>
+    <dimen name="sm_focus_scale">1.06</dimen>
+    <dimen name="sm_focus_border">2dp</dimen>
+    <dimen name="sm_card_radius">10dp</dimen>
+    <dimen name="sm_safe_edge">24dp</dimen>
+</resources>

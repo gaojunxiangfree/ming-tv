@@ -8,14 +8,16 @@
     android:clickable="true"
     android:background="@drawable/bg_card">
 
+    <!-- 高度由 ivPoster 决定(sm_poster_h 为默认值, 运行时按档位/可用高度覆写),
+         wrap_content 避免父容器写死高度与代码计算结果不一致导致海报被裁切 -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/sm_poster_h">
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/ivPoster"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="@dimen/sm_poster_h"
             android:scaleType="fitCenter"
             android:background="@color/sm_surface_light" />
 
