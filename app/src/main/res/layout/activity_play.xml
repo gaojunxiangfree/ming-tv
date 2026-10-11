@@ -188,16 +188,86 @@
                     android:text="循环 关"
                     android:textSize="@dimen/sm_text_body"
                     android:textColor="@color/sm_text_dim" />
+
+                <TextView
+                    android:id="@+id/btnMore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="14dp"
+                    android:background="@drawable/bg_button_selector"
+                    android:paddingLeft="18dp"
+                    android:paddingTop="10dp"
+                    android:paddingRight="18dp"
+                    android:paddingBottom="10dp"
+                    android:focusable="true"
+                    android:text="更多 ▾"
+                    android:textSize="@dimen/sm_text_body"
+                    android:textColor="@color/sm_text" />
             </LinearLayout>
         </HorizontalScrollView>
+    </LinearLayout>
 
-        <!-- 第2行: 功能 -->
+    <!-- 播放进度条(可拖动) -->
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginBottom="92dp"
+        android:max="1000"
+        android:progressTint="@color/sm_primary"
+        android:thumbTint="@color/sm_primary"
+        android:progressBackgroundTint="@color/sm_surface_light" />
+
+    <!-- 进度时间(底部左侧) -->
+    <TextView
+        android:id="@+id/tvPosition"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginBottom="114dp"
+        android:textSize="@dimen/sm_text_small"
+        android:textColor="@color/sm_text_dim" />
+
+    <!-- 当前分辨率(底部左侧, 进度时间旁) -->
+    <TextView
+        android:id="@+id/tvQuality"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@id/tvPosition"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="114dp"
+        android:textSize="@dimen/sm_text_small"
+        android:textColor="@color/sm_primary"
+        android:textStyle="bold" />
+
+    <!-- 更多功能浮层: 收纳原第2行功能按钮(倍速/清晰度/字幕/弹幕/P2P/选集/内核/解码/渲染/片头/片尾/默认/音轨).
+         半透明浮层覆盖在控制栏上方, 点击「更多」展开, 返回键/再点「更多」收起. -->
+    <LinearLayout
+        android:id="@+id/morePanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginBottom="96dp"
+        android:background="@drawable/bg_more_panel"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
+
         <HorizontalScrollView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:overScrollMode="never"
-            android:scrollbars="none">
+            android:scrollbars="none"
+            android:focusable="false"
+            android:descendantFocusability="afterDescendants">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -401,45 +471,6 @@
             </LinearLayout>
         </HorizontalScrollView>
     </LinearLayout>
-
-    <!-- 播放进度条(可拖动) -->
-    <SeekBar
-        android:id="@+id/seekBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="30dp"
-        android:layout_marginBottom="188dp"
-        android:max="1000"
-        android:progressTint="@color/sm_primary"
-        android:thumbTint="@color/sm_primary"
-        android:progressBackgroundTint="@color/sm_surface_light" />
-
-    <!-- 进度时间(底部左侧) -->
-    <TextView
-        android:id="@+id/tvPosition"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="30dp"
-        android:layout_marginBottom="210dp"
-        android:textSize="@dimen/sm_text_small"
-        android:textColor="@color/sm_text_dim" />
-
-    <!-- 当前分辨率(底部左侧, 进度时间旁) -->
-    <TextView
-        android:id="@+id/tvQuality"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@id/tvPosition"
-        android:layout_marginLeft="16dp"
-        android:layout_marginBottom="210dp"
-        android:textSize="@dimen/sm_text_small"
-        android:textColor="@color/sm_primary"
-        android:textStyle="bold" />
 
     <!-- 选集面板(平铺网格): 覆盖在底部控制区之上, 约三行铺满, 遥控器好选.
          置于控制条之后声明, 保证绘制在控制条上层. -->

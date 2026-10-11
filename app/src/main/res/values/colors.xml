@@ -13,6 +13,8 @@
     <color name="sm_text_dim">#8A93B2</color>
     <color name="sm_focus_stroke">#22D3EE</color>
     <color name="sm_focus_glow">#5522D3EE</color>
+    <!-- 详情页小窗红框焦点 -->
+    <color name="sm_focus_red">#FF5252</color>
     <color name="sm_episode_bg">#1A2140</color>
     <color name="sm_live_divider">#1F2745</color>
 </resources>

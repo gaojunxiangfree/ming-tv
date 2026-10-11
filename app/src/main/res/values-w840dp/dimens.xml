@@ -6,14 +6,17 @@
   取值与 values-sw900dp/ 保持一致.
 -->
 <resources>
-    <dimen name="sm_text_title">36sp</dimen>
-    <dimen name="sm_text_body">28sp</dimen>
-    <dimen name="sm_text_small">24sp</dimen>
-    <dimen name="sm_text_label">24sp</dimen>
-    <dimen name="sm_text_empty">22sp</dimen>
-    <dimen name="sm_text_clock">30sp</dimen>
-    <dimen name="sm_text_epg">18sp</dimen>
-    <dimen name="sm_text_search_info">20sp</dimen>
+    <dimen name="sm_text_title">40sp</dimen>
+    <dimen name="sm_text_body">32sp</dimen>
+    <dimen name="sm_text_small">28sp</dimen>
+    <dimen name="sm_text_label">28sp</dimen>
+    <dimen name="sm_text_empty">28sp</dimen>
+    <dimen name="sm_text_clock">34sp</dimen>
+    <dimen name="sm_text_epg">24sp</dimen>
+    <dimen name="sm_text_search_info">26sp</dimen>
+    <!-- 详情页小窗预览尺寸(优化点2) -->
+    <dimen name="sm_preview_w">300dp</dimen>
+    <dimen name="sm_preview_h">430dp</dimen>
     <dimen name="sm_poster_w">160dp</dimen>
     <dimen name="sm_poster_h">360dp</dimen>
     <dimen name="sm_poster_span">20dp</dimen>

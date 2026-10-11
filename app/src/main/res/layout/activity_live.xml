@@ -231,7 +231,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:focusable="false"
+            android:focusable="true"
+            android:descendantFocusability="afterDescendants"
             android:clipToPadding="false" />
 
         <View

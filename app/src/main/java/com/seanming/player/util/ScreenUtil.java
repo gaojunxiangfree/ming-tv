@@ -5,6 +5,8 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.seanming.player.R;
@@ -141,12 +143,74 @@ public final class ScreenUtil {
 
     // ================= 字号 =================
 
+    /** TV 档强制字号表(sp): 与 values-w840dp/ values-sw900dp/ 保持一致.
+     *  <p>部分投影仪/电视 density 偏高导致可用宽度 dp < 840, 资源限定符落到手机/平板档,
+     *  与档位判定(无触摸屏 → TV)脱节, 字体会明显偏小. 这里按档位强制, 保证 TV 档永远用大字号. */
+    private static int tvTextSizeSp(int dimenRes) {
+        if (dimenRes == R.dimen.sm_text_title) return 40;
+        if (dimenRes == R.dimen.sm_text_body) return 32;
+        if (dimenRes == R.dimen.sm_text_small) return 28;
+        if (dimenRes == R.dimen.sm_text_label) return 28;
+        if (dimenRes == R.dimen.sm_text_empty) return 28;
+        if (dimenRes == R.dimen.sm_text_clock) return 34;
+        if (dimenRes == R.dimen.sm_text_epg) return 24;
+        if (dimenRes == R.dimen.sm_text_search_info) return 26;
+        return 0;
+    }
+
     /**
      * 用按档位分流的字号资源(如 {@code R.dimen.sm_text_label})设置字号.
      * 代码里动态创建的文本走这里, 保证与布局里的 {@code @dimen/sm_text_*} 同源。
+     * 电视/投影仪档额外做代码级兜底(见 {@link #tvTextSizeSp})。
      */
     public static void setTextSize(TextView tv, int dimenRes) {
         if (tv == null) return;
+        if (deviceTier(tv.getContext()) == TIER_TV) {
+            int sp = tvTextSizeSp(dimenRes);
+            if (sp > 0) {
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
+                return;
+            }
+        }
         tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, tv.getResources().getDimension(dimenRes));
+    }
+
+    /**
+     * TV 档字体兜底: 递归遍历 View 树, 把引用了 {@code @dimen/sm_text_*} 的 TextView
+     * 按 TV 档 sp 重设。幂等: 若设备本就命中 w840dp/sw900dp, 解析值已是 TV 档, 重设为同值即 no-op。
+     * 非 TV 档直接返回, 零开销。
+     */
+    public static void applyTvTextSizes(View root) {
+        if (root == null || deviceTier(root.getContext()) != TIER_TV) return;
+        int[] dimens = {
+                R.dimen.sm_text_title, R.dimen.sm_text_body, R.dimen.sm_text_small,
+                R.dimen.sm_text_label, R.dimen.sm_text_empty, R.dimen.sm_text_clock,
+                R.dimen.sm_text_epg, R.dimen.sm_text_search_info
+        };
+        // 当前配置下各 dimen 解析出的 px 值
+        float[] px = new float[dimens.length];
+        for (int i = 0; i < dimens.length; i++) {
+            px[i] = root.getResources().getDimension(dimens[i]);
+        }
+        applyTvTextSizesRec(root, dimens, px);
+    }
+
+    private static void applyTvTextSizesRec(View v, int[] dimens, float[] px) {
+        if (v instanceof TextView) {
+            TextView tv = (TextView) v;
+            float size = tv.getTextSize();
+            for (int i = 0; i < dimens.length; i++) {
+                if (Math.abs(size - px[i]) < 1f) {
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, tvTextSizeSp(dimens[i]));
+                    break;
+                }
+            }
+        }
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                applyTvTextSizesRec(g.getChildAt(i), dimens, px);
+            }
+        }
     }
 }

@@ -18,11 +18,17 @@ public class LiveGroupAdapter extends RecyclerView.Adapter<LiveGroupAdapter.VH> 
 
     public interface OnClick { void onClick(int position); }
 
+    /** 遥控器左右移动焦点到某 Tab 时回调(聚焦即切组) */
+    public interface OnFocus { void onFocus(int position); }
+
     private final List<String> items = new ArrayList<>();
     private int selected = -1;
     private OnClick listener;
+    private OnFocus focusListener;
 
     public void setOnClick(OnClick l) { this.listener = l; }
+
+    public void setOnFocus(OnFocus l) { this.focusListener = l; }
 
     public void submit(List<String> list) {
         items.clear();
@@ -51,6 +57,12 @@ public class LiveGroupAdapter extends RecyclerView.Adapter<LiveGroupAdapter.VH> 
         h.itemView.setSelected(position == selected);
         h.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onClick(h.getBindingAdapterPosition());
+        });
+        // 遥控焦点落到某分组 Tab 即切组(实时刷新频道列表)
+        h.itemView.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus && focusListener != null) {
+                focusListener.onFocus(h.getBindingAdapterPosition());
+            }
         });
     }
 

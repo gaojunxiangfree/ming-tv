@@ -142,6 +142,7 @@ public class LiveActivity extends AppCompatActivity implements RotatablePage {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_live);
+        ScreenUtil.applyTvTextSizes(findViewById(android.R.id.content));
 
         playerView = findViewById(R.id.playerView);
         playerContainer = findViewById(R.id.playerContainer);
@@ -197,6 +198,8 @@ public class LiveActivity extends AppCompatActivity implements RotatablePage {
         rvGroups.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         rvGroups.setAdapter(groupAdapter);
         groupAdapter.setOnClick(this::selectGroup);
+        // 遥控焦点落到分组 Tab 即切组(焦点保持在 Tab 行, 便于连续左右选择)
+        groupAdapter.setOnFocus(this::onGroupTabFocused);
 
         initPlayer();
         loadGroups();
@@ -227,6 +230,16 @@ public class LiveActivity extends AppCompatActivity implements RotatablePage {
     }
 
     private void selectGroup(int index) {
+        selectGroup(index, true);
+    }
+
+    /**
+     * 切换分组并刷新频道列表/播放.
+     *
+     * @param grabChannelFocus 是否把遥控焦点移回频道列表. 焦点在分组 Tab 行时传 false,
+     *                         保持焦点留在 Tab 行, 便于遥控连续左右选择分组.
+     */
+    private void selectGroup(int index, boolean grabChannelFocus) {
         if (index < 0 || index >= groups.size()) return;
         currentGroup = index;
         groupAdapter.setSelected(index);
@@ -241,16 +254,21 @@ public class LiveActivity extends AppCompatActivity implements RotatablePage {
                     ? rememberChannel : 0;
             channelAdapter.setSelected(target);
             playChannel(currentChannels.get(target));
-            scrollChannelTo(target);
+            scrollChannelTo(target, grabChannelFocus);
         }
     }
 
     private void scrollChannelTo(int position) {
+        scrollChannelTo(position, true);
+    }
+
+    private void scrollChannelTo(int position, boolean grabFocus) {
         if (position < 0) return;
         // RecyclerView 布局/滚动中不能同步操作; 两次 post 确保 adapter 已完成重绑
         rvChannels.post(() -> {
             rvChannels.scrollToPosition(position);
             rvChannels.post(() -> {
+                if (!grabFocus) return;
                 RecyclerView.ViewHolder vh = rvChannels.findViewHolderForAdapterPosition(position);
                 if (vh != null) vh.itemView.requestFocus();
                 else rvChannels.requestFocus();
@@ -745,6 +763,27 @@ public class LiveActivity extends AppCompatActivity implements RotatablePage {
         selectGroup(next);
     }
 
+    /** 遥控焦点落到分组 Tab: 切换分组但焦点留在 Tab 行(便于连续左右选择) */
+    private void onGroupTabFocused(int index) {
+        if (index < 0 || index >= groups.size()) return;
+        if (index != currentGroup) {
+            selectGroup(index, false);
+        }
+    }
+
+    /** 焦点移到指定分组 Tab(越界则不动): 配合左右键在分组行移动 */
+    private void groupFocus(int index) {
+        if (index < 0 || index >= groups.size()) return;
+        if (index != currentGroup) {
+            selectGroup(index, false);
+        }
+        rvGroups.post(() -> {
+            RecyclerView.ViewHolder vh = rvGroups.findViewHolderForAdapterPosition(index);
+            if (vh != null) vh.itemView.requestFocus();
+            else rvGroups.requestFocus();
+        });
+    }
+
     /** 数字键直接选台: 频道号匹配(或按序号) */
     private void commitNumber() {
         hideNumberInput();
@@ -832,6 +871,12 @@ public class LiveActivity extends AppCompatActivity implements RotatablePage {
         return f != null && isDescendant(channelPanel, f);
     }
 
+    /** 当前焦点是否在顶部分组 Tab 行内(含各 Tab 项) */
+    private boolean focusInGroups() {
+        View f = getCurrentFocus();
+        return f != null && isDescendant(rvGroups, f);
+    }
+
     private boolean isDescendant(View parent, View child) {
         View cur = child;
         while (cur != null) {
@@ -874,6 +919,28 @@ public class LiveActivity extends AppCompatActivity implements RotatablePage {
                 hidePanel();
                 return true;
             }
+            // 焦点在顶部分组 Tab 行: 左右在 Tab 间移动焦点(聚焦即切组, 见 onGroupTabFocused),
+            // 部分投影遥控左右键映射为媒体键也按此处理; 上/下移回频道列表
+            if (focusInGroups()) {
+                if (code == KeyEvent.KEYCODE_DPAD_LEFT
+                        || code == KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
+                    groupFocus(currentGroup - 1);
+                    return true;
+                }
+                if (code == KeyEvent.KEYCODE_DPAD_RIGHT
+                        || code == KeyEvent.KEYCODE_MEDIA_NEXT) {
+                    groupFocus(currentGroup + 1);
+                    return true;
+                }
+                if (code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
+                        || code == KeyEvent.KEYCODE_CHANNEL_UP
+                        || code == KeyEvent.KEYCODE_CHANNEL_DOWN) {
+                    if (currentChannel >= 0) scrollChannelTo(currentChannel);
+                    else rvChannels.post(() -> rvChannels.requestFocus());
+                    return true;
+                }
+                return super.dispatchKeyEvent(event);
+            }
             if (code == KeyEvent.KEYCODE_DPAD_LEFT) {
                 groupPrev();
                 return true;
@@ -915,14 +982,28 @@ public class LiveActivity extends AppCompatActivity implements RotatablePage {
         return super.dispatchKeyEvent(event);
     }
 
-    /** 返回键: 先收面板, 再退出 */
+    /** 返回键: 先收面板; 面板已收起时二次确认, 确认后才退出, 避免误触退出直播 */
     @Override
     public void onBackPressed() {
         if (panelVisible) {
             hidePanel();
             return;
         }
-        super.onBackPressed();
+        showExitConfirm();
+    }
+
+    /** 退出直播二次确认弹窗 */
+    private void showExitConfirm() {
+        if (isFinishing()) return;
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("退出直播")
+                .setMessage("确定要退出直播页面吗?")
+                .setPositiveButton("退出", (d, w) -> {
+                    d.dismiss();
+                    finish();
+                })
+                .setNegativeButton("取消", (d, w) -> d.dismiss())
+                .show();
     }
 
     @Override

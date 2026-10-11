@@ -20,6 +20,9 @@
     <dimen name="sm_text_search_info">13sp</dimen>
     <dimen name="sm_poster_w">100dp</dimen>
     <dimen name="sm_poster_h">145dp</dimen>
+    <!-- 详情页小窗预览兜底(实际走 layout-port) -->
+    <dimen name="sm_preview_w">240dp</dimen>
+    <dimen name="sm_preview_h">340dp</dimen>
     <dimen name="sm_poster_span">8dp</dimen>
     <dimen name="sm_focus_scale">1.05</dimen>
     <dimen name="sm_focus_border">2dp</dimen>

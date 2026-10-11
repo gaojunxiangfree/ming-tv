@@ -83,6 +83,7 @@ public class DetailActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+        ScreenUtil.applyTvTextSizes(findViewById(android.R.id.content));
 
         vod = (Vod) getIntent().getSerializableExtra("vod");
         if (vod == null) { finish(); return; }
@@ -123,6 +124,11 @@ public class DetailActivity extends AppCompatActivity {
 
         // 简介小窗预览: 点击放大全屏播放, 返回后回到小窗续播
         previewFrame.setOnClickListener(v -> openFullscreenFromPreview());
+        // 小窗聚焦时给外层容器置 selected, 驱动 bg_preview_frame 红框(视频 surface 会盖住内层背景)
+        previewFrame.setOnFocusChangeListener((v, hasFocus) -> {
+            View wrap = findViewById(R.id.posterWrap);
+            if (wrap != null) wrap.setSelected(hasFocus);
+        });
 
         // 动态文字大小(设置页"文字大小"): 应用到标题/简介
         applyTextScale();
@@ -264,7 +270,7 @@ public class DetailActivity extends AppCompatActivity {
         if (vod.vod_director != null && !vod.vod_director.isEmpty()) meta.append("导演: ").append(vod.vod_director);
         tvMeta.setText(meta.toString());
         tvContent.setText(vod.vod_content == null ? "" : vod.vod_content.trim());
-        ImageUtil.loadPoster(ivPoster, vod.vod_pic);
+        if (ivPoster != null) ImageUtil.loadPoster(ivPoster, vod.vod_pic);
         refreshFavorite();
     }
 

@@ -86,6 +86,7 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        ScreenUtil.applyTvTextSizes(findViewById(android.R.id.content));
 
         tabContainer = findViewById(R.id.tabContainer);
         gridVod = findViewById(R.id.gridVod);

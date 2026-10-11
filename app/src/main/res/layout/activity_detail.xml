@@ -61,20 +61,13 @@
                 android:orientation="horizontal"
                 android:paddingTop="10dp">
 
-                <!-- 海报 + 叠加其上的小窗预览视频 -->
+                <!-- 小窗预览视频: 纯视频窗口(无海报铺底), 遥控聚焦显示红框, 点击进入全屏 -->
                 <FrameLayout
                     android:id="@+id/posterWrap"
-                    android:layout_width="240dp"
-                    android:layout_height="340dp">
+                    android:layout_width="@dimen/sm_preview_w"
+                    android:layout_height="@dimen/sm_preview_h"
+                    android:background="@drawable/bg_preview_frame">
 
-                    <ImageView
-                        android:id="@+id/ivPoster"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:background="@drawable/bg_card" />
-
-                    <!-- 小窗预览视频: 默认铺满小窗自动播放, 点击进入全屏 -->
                     <FrameLayout
                         android:id="@+id/previewFrame"
                         android:layout_width="match_parent"
@@ -95,7 +88,7 @@
                         android:paddingRight="14dp"
                         android:paddingBottom="4dp"
                         android:text="▶ 全屏"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/sm_text_small"
                         android:textColor="#FFFFFF" />
 
                     <!-- 加载失败提示: 仅解析失败时显示 -->
@@ -108,7 +101,7 @@
                         android:padding="14dp"
                         android:gravity="center"
                         android:text="▶ 加载失败, 点击从头播放"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/sm_text_small"
                         android:textColor="#FFFFFFFF"
                         android:visibility="gone" />
                 </FrameLayout>

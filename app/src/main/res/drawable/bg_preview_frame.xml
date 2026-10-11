@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 详情页小窗预览容器: 默认深色圆角底, 小窗聚焦时(posterWrap.selected=true)显示红框 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/sm_surface" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/sm_focus_red" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/sm_surface" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+</selector>

@@ -82,6 +82,9 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
     private View controlBar;
     /** 手机播放页右下角的全屏触发按钮; 大屏横屏布局没有该控件, 恒为 null */
     private ImageView btnFullscreen;
+    /** 「更多」浮层: 收纳倍速/清晰度等第二行功能按钮, 点击展开/收起 */
+    private View morePanel;
+    private TextView btnMore;
     private TextView tvTitle;
     private TextView tvPosition;
     private TextView btnPlayPause;
@@ -199,6 +202,7 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
+        ScreenUtil.applyTvTextSizes(findViewById(android.R.id.content));
 
         vod = (Vod) getIntent().getSerializableExtra("vod");
         flag = getIntent().getStringExtra("flag");
@@ -267,6 +271,11 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
         btnFullscreen = findViewById(R.id.btnFullscreen);
         if (btnFullscreen != null) {
             btnFullscreen.setOnClickListener(v -> toggleFullscreen());
+        }
+        btnMore = findViewById(R.id.btnMore);
+        morePanel = findViewById(R.id.morePanel);
+        if (btnMore != null) {
+            btnMore.setOnClickListener(v -> toggleMorePanel());
         }
 
         // 手势控制初始化
@@ -397,6 +406,7 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
         setupFocusAnim(btnDefault);
         setupFocusAnim(btnAudio);
         setupFocusAnim(findViewById(R.id.btnEpisodes));
+        setupFocusAnim(btnMore);
 
         // 选集平铺网格: 列数按屏宽自适应(投影仪/电视更宽则更多列), 约三行铺满便于遥控器选择
         rvEpisodes.setLayoutManager(new GridLayoutManager(this, ScreenUtil.episodeColumns(this)));
@@ -720,12 +730,13 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
     private void showEpisodePanel() {
         if (episodePanel == null) return;
         episodePanel.setVisibility(View.VISIBLE);
-        // 面板覆盖底部区域, 暂时收起控制条与进度, 避免重叠
+        // 面板覆盖底部区域, 暂时收起控制条/进度/更多浮层, 避免重叠
         if (controlBar != null) controlBar.setVisibility(View.GONE);
         if (seekBar != null) seekBar.setVisibility(View.GONE);
         if (tvPosition != null) tvPosition.setVisibility(View.GONE);
         if (tvQuality != null) tvQuality.setVisibility(View.GONE);
         if (tvTopInfo != null) tvTopInfo.setVisibility(View.GONE);
+        if (morePanel != null) morePanel.setVisibility(View.GONE);
         hideHandler.removeCallbacks(hideRunnable);
         // 收纳: 自动切到当前集所在的页码范围, 并把焦点落到当前集
         selectEpisodeRange(Math.max(index, 0) / EPISODE_RANGE_SIZE);
@@ -745,6 +756,41 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
         episodePanel.setVisibility(View.GONE);
         setControlsVisibility(View.VISIBLE);
         controlsVisible = true;
+        resetAutoHide();
+    }
+
+    // ================= 更多浮层(第二行功能按钮收纳) =================
+
+    /** 「更多」是否展开 */
+    private boolean morePanelOpen() {
+        return morePanel != null && morePanel.getVisibility() == View.VISIBLE;
+    }
+
+    /** 「更多」按钮: 展开/收起第二行功能按钮 */
+    private void toggleMorePanel() {
+        if (morePanelOpen()) {
+            hideMorePanel();
+        } else {
+            showMorePanel();
+        }
+    }
+
+    /** 展开更多浮层: 焦点落到第一个功能按钮(倍速), 暂停自动隐藏计时 */
+    private void showMorePanel() {
+        if (morePanel == null) return;
+        morePanel.setVisibility(View.VISIBLE);
+        hideHandler.removeCallbacks(hideRunnable);
+        morePanel.post(() -> {
+            if (btnSpeed != null) btnSpeed.requestFocus();
+        });
+    }
+
+    /** 收起更多浮层: 焦点回到「更多」按钮, 恢复自动隐藏计时 */
+    private void hideMorePanel() {
+        if (morePanel == null) return;
+        morePanel.setVisibility(View.GONE);
+        hideHandler.removeCallbacks(hideRunnable);
+        if (btnMore != null && btnMore.getVisibility() == View.VISIBLE) btnMore.requestFocus();
         resetAutoHide();
     }
 
@@ -838,6 +884,8 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
         if (tvQuality != null) tvQuality.setVisibility(visibility);
         if (tvTopInfo != null) tvTopInfo.setVisibility(visibility);
         if (btnFullscreen != null) btnFullscreen.setVisibility(visibility);
+        // 控制层整体隐藏时, 更多浮层一并收起
+        if (morePanel != null && visibility == View.GONE) morePanel.setVisibility(View.GONE);
     }
 
     // ================= 手机全屏切换 =================
@@ -876,9 +924,9 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
     /** 重置自动隐藏计时: 控制层可见时, 5 秒无操作即自动隐藏(播放/暂停均生效) */
     private void resetAutoHide() {
         hideHandler.removeCallbacks(hideRunnable);
-        // 选集面板展开时不自动隐藏, 避免挑选剧集时被收起
+        // 选集面板/更多浮层展开时不自动隐藏, 避免挑选时被收起
         boolean episodePanelOpen = episodePanel != null && episodePanel.getVisibility() == View.VISIBLE;
-        if (controlsVisible && !episodePanelOpen) {
+        if (controlsVisible && !episodePanelOpen && !morePanelOpen()) {
             hideHandler.postDelayed(hideRunnable, AUTO_HIDE_DELAY);
         }
     }
@@ -922,7 +970,7 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
 
         final TextView tvHint = new TextView(this);
         tvHint.setGravity(android.view.Gravity.CENTER);
-        tvHint.setTextSize(14f);
+        ScreenUtil.setTextSize(tvHint, R.dimen.sm_text_small);
         tvHint.setTextColor(getResources().getColor(R.color.sm_text_dim));
         tvHint.setText("当前 " + formatMs(cur) + "  ·  拖动选择目标时间");
 
@@ -1114,7 +1162,11 @@ public class PlayActivity extends AppCompatActivity implements RotatablePage {
                     seekBy(-10000);
                     return true;
                 case android.view.KeyEvent.KEYCODE_BACK:
-                    // 优先收起选集面板/控制层, 全部收起后才退出
+                    // 优先收起更多浮层/选集面板/控制层, 全部收起后才退出
+                    if (morePanelOpen()) {
+                        hideMorePanel();
+                        return true;
+                    }
                     if (episodePanel != null && episodePanel.getVisibility() == View.VISIBLE) {
                         hideEpisodePanel();
                         return true;

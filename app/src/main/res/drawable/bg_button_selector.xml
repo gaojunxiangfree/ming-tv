@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 遥控聚焦: 深色底 + 高亮描边.
+         此前用亮青实底(sm_primary), 会把浅色文字甚至本身就是青色的文字(倍速/内核等)整片淹没,
+         投影仪上尤其明显; 改为深底描边后文字始终清晰可读 -->
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/sm_primary" />
-            <stroke android:width="2dp" android:color="@color/sm_focus_glow" />
+            <solid android:color="@color/sm_surface_light" />
+            <stroke android:width="2dp" android:color="@color/sm_primary" />
             <corners android:radius="10dp" />
         </shape>
     </item>
+    <!-- 选中(当前项): 保持原有主色深底, 全 App(首页 Tab/设置项/线路)共用 -->
     <item android:state_selected="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/sm_primary_dark" />
